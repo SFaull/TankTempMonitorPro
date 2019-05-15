@@ -16,4 +16,10 @@
 #define SENSOR_READ_INTERVAL 1000  // read sensors every second
 
 /* Display */
-#define DISPLAY_UPDATE_INTERVAL 1000 // update display every second
+#define DISPLAY_UPDATE_INTERVAL 4000 // update display every second
+
+/* Temperature preferences */
+#define TEMP_HOT  60
+#define TEMP_COLD 40
+
+#define SENSOR_COUNT 5

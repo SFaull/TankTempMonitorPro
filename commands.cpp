@@ -9,14 +9,12 @@ SerialCommand SCmd;   // The SerialCommand object
 
 static void identify();
 static void unrecognized();
-static void getTemperatureTank();
-static void getTemperaturePump();
+static void getTemperature();
 
 void commands_init(void)
 {  
   SCmd.addCommand("*IDN?", identify);
-  SCmd.addCommand("TEMP:TANK", getTemperatureTank);
-  SCmd.addCommand("TEMP:PUMP", getTemperaturePump);
+  SCmd.addCommand("TEMP?", getTemperature);
   SCmd.addDefaultHandler(unrecognized);
 }
 
@@ -32,7 +30,8 @@ static void identify()
   Serial.println(VERSION_STRING);
 }
 
-static void getTemperatureTank()
+
+static void getTemperature()
 {
   int index;  
   char *arg; 
@@ -45,14 +44,8 @@ static void getTemperatureTank()
   }
 
   index=atoi(arg);
-  float temp = temperature_get_tank(index);
+  float temp = temperature_get(index);
   
-  Serial.println(temp);
-}
-
-static void getTemperaturePump()
-{
-  float temp = temperature_get_pump();
   Serial.println(temp);
 }
 

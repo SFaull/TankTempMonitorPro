@@ -1,5 +1,6 @@
 #include "display.h"
 #include "image.h"
+#include "config.h"
 /*
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
@@ -24,8 +25,20 @@
 #define GREY    0x8410
 #define ORANGE  0xE880
 
+typedef struct 
+{
+  typedef
+  int tank[SENSOR_COUNT-1];
+  int pump;
+} systemInfo_t;
+
+static int temp2colour(float temp);
+static void print_float_at(float val, int x, int y);
+
 MCUFRIEND_kbv tft;
 uint16_t ID;
+systemInfo_t mySystem;
+
 
 void display_init(void)
 {
@@ -35,18 +48,41 @@ void display_init(void)
   tft.setRotation(2);
 }
 
-void display_update(float t0, float t1, float t2, float t3, float tpump)
+void display_update2(float temp[], int size)
 {
-  //tft.fillScreen(BLACK);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2);
-  tft.setCursor(0, 0);
-  tft.println("Temperatures:");
-  tft.println(t0);
-  tft.println(t1);
-  tft.println(t2);
-  tft.println(t3);
-  tft.println(tpump);
+    print_float_at(temp[3], 150, 50);
+    print_float_at(temp[2], 150, 90);
+    print_float_at(temp[1], 150, 130);
+    print_float_at(temp[0], 150, 170);
+    print_float_at(temp[4], 50, 260);
+}
+
+void display_update(float temp[], int size) 
+{  
+    for(int i=0; i< size; i++)
+      Serial.println(temp[i]);
+
+    int x = 10, y = 10;
+
+    int w_bottom = 131, h_bottom = 55;
+    int w_top = 131, h_top = 83;
+    int w_pump = 86, h_pump = 60;
+
+    const int SZ = 131*83 / 8;
+uint8_t sram[SZ];
+    
+    memcpy_P(sram, water_tank_bottom, sram);
+
+    //tft.fillScreen(BLACK);
+    tft.drawBitmap(x, y+148, water_tank_bottom, w_bottom, h_bottom, temp2colour(temp[0]));    
+    tft.drawBitmap(x, y+108, water_tank_bottom, w_bottom, h_bottom, temp2colour(temp[1]));
+    tft.drawBitmap(x, y+68, water_tank_bottom, w_bottom, h_bottom, temp2colour(temp[2]));
+
+    memcpy_P(sram, water_tank_top, sram);
+    tft.drawBitmap(x, y, water_tank_top, w_top, h_top, temp2colour(temp[3]));
+
+    memcpy_P(sram, pump, sram);
+    tft.drawBitmap(135, 240, pump, w_pump, h_pump, temp2colour(temp[4]));
 }
 
 void display_refresh(void)
@@ -67,19 +103,33 @@ void display_splash(void)
   tft.print("Booting up...");
 }
 
-// TODO interpret temperatures to select colour
-void display_drawTank(void)
-{
-    int x = 5, y, w = 131, h = 83;
-    uint32_t t;
-    const int SZ = w * h / 8;
-    uint8_t sram[SZ];
-    memcpy_P(sram, water_tank_white, SZ);
 
-    tft.fillScreen(BLACK);
-    tft.drawBitmap(x, y+120, water_tank_white, 131, 83, RED);
-    tft.drawBitmap(x, y+80, water_tank_white, 131, 83, BLUE);
-    tft.drawBitmap(x, y+40, water_tank_white, 131, 83, BLUE);
-    tft.drawBitmap(x, y, water_tank_white, 131, 83, GREEN);
-    
+void display_clear(void)
+{
+  tft.fillScreen(BLACK);
+}
+
+static int temp2colour(float temp)
+{
+  if(temp < 0)
+    return GREY;  // probably an error
+  if(temp < TEMP_COLD)
+    return BLUE;
+  else if (temp < TEMP_HOT)
+    return GREEN;
+  else
+    return RED;  
+}
+
+static void print_float_at(float val, int x, int y)
+{
+    char buf[10];
+    int16_t x1, y1, w, h;
+    tft.getTextBounds("000.0", x, y, &x1, &y1, &w, &h); 
+    dtostrf(val, 5, 1, buf);   //e.g. 123.4
+    tft.fillRect(x1, y1, w, h, BLACK);
+    tft.setTextColor(WHITE);
+    tft.setTextSize(2);
+    tft.setCursor(x, y);
+    tft.print(buf);
 }

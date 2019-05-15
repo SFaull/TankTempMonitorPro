@@ -24,8 +24,8 @@ void setup()
   temperature_init();
   commands_init();
   timers_init();
-   display_drawTank();
-   while(1){}
+  display_clear();
+  updateDisplay();
 }
 
 void loop() 
@@ -47,7 +47,7 @@ void loop()
   if(timer_expired(displayRefreshTimer, DISPLAY_UPDATE_INTERVAL))
   {  
     timer_set(&displayRefreshTimer);    
-    display_update(temperature_get_tank(0),temperature_get_tank(1),temperature_get_tank(2),temperature_get_tank(3),temperature_get_pump());
+    updateDisplay();
   }
   
   // TODO
@@ -56,4 +56,14 @@ void loop()
   // OTA process
   
   commands_process();
+}
+
+void updateDisplay(void)
+{
+      float temp_array[SENSOR_COUNT] = {0};
+    for(int i=0; i<SENSOR_COUNT; i++)
+      temp_array[i] = temperature_get(i);
+      
+   display_update(temp_array, SENSOR_COUNT);
+   display_update2(temp_array, SENSOR_COUNT);
 }

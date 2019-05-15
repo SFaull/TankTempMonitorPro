@@ -1,14 +1,14 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include "config.h"
 
 #define RESOLUTION 12
-#define SENSOR_COUNT 5
 
 // TODO: implement some form of rolling average
 typedef struct 
 {
   DeviceAddress address;
-  float temperature;
+  float temperature = -1.0;
 } sensor_t;
 
 

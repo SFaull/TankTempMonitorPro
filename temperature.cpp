@@ -1,7 +1,6 @@
 #include "temperature.h"
 #include "ds18b20.h"
-
-#define TANK_SENSOR_COUNT 4
+#include "config.h"
 
 void temperature_init(void)
 {
@@ -16,15 +15,10 @@ void temperature_update(void)
   ds18b20_request();
 }
 
-float temperature_get_tank(int index)
+float temperature_get(int index)
 {
-   if(index >= TANK_SENSOR_COUNT)
+   if(index >= SENSOR_COUNT)
     return -1;
 
    return mySensor[index].temperature;
-}
-
-float temperature_get_pump(void)
-{
-  return mySensor[TANK_SENSOR_COUNT+1].temperature;
 }
