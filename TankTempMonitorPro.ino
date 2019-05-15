@@ -33,8 +33,8 @@ void loop()
   // take sensor readings
   if(timer_expired(sensorReadTimer, SENSOR_READ_INTERVAL))
   {  
-    timer_set(&sensorReadTimer);
     temperature_update();
+    timer_set(&sensorReadTimer);
   }
 
   // publish sensor readings to MQTT channel
@@ -46,8 +46,8 @@ void loop()
   // update TFT display. TODO: only update if value has changed
   if(timer_expired(displayRefreshTimer, DISPLAY_UPDATE_INTERVAL))
   {  
-    timer_set(&displayRefreshTimer);    
     updateDisplay();
+    timer_set(&displayRefreshTimer);    
   }
   
   // TODO
