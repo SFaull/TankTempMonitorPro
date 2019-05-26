@@ -10,12 +10,13 @@ SerialCommand SCmd;   // The SerialCommand object
 static void identify();
 static void unrecognized();
 static void getTemperature();
+static void unrecognized(const char *command);
 
 void commands_init(void)
 {  
   SCmd.addCommand("*IDN?", identify);
   SCmd.addCommand("TEMP?", getTemperature);
-  SCmd.addDefaultHandler(unrecognized);
+  SCmd.setDefaultHandler(unrecognized);
 }
 
 void commands_process(void)
@@ -49,8 +50,7 @@ static void getTemperature()
   Serial.println(temp);
 }
 
-// This gets set as the default handler, and gets called when no other command matches. 
-static void unrecognized()
-{
-  Serial.println("What?"); 
+// This gets set as the default handler, and gets called when no other command matches.
+static void unrecognized(const char *command) {
+  Serial.println("What?");
 }
