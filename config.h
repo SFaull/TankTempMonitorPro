@@ -1,3 +1,5 @@
+//#define DEBUG
+
 /* General */
 #define DEVICE_NAME             "TankTempMonitor"
 #define SERIAL_BAUD_RATE        115200

@@ -18,7 +18,11 @@ void temperature_update(void)
 float temperature_get(int index)
 {
    if(index >= SENSOR_COUNT)
+   {
+    Serial.print("Invalid sensor index: ");
+    Serial.println(index);
     return -1;
+   }
 
    return mySensor[index].temperature;
 }
