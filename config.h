@@ -21,7 +21,7 @@
 #define DISPLAY_UPDATE_INTERVAL 4000 // update display every second
 
 /* Temperature preferences */
-#define TEMP_HOT  60
-#define TEMP_COLD 40
+#define TEMP_HOT  30
+#define TEMP_COLD 25
 
 #define SENSOR_COUNT 5
