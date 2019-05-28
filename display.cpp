@@ -35,6 +35,10 @@ typedef struct
 static int temp2colour(float temp);
 static void print_float_at(float val, int x, int y);
 
+static void updateTankTop(float temp);
+static void updateTankBottom(float temp1, float temp2, float temp3);
+static void updatePump(float temp);
+
 MCUFRIEND_kbv tft;
 uint16_t ID;
 systemInfo_t mySystem;
@@ -57,32 +61,35 @@ void display_update2(float temp[], int size)
     print_float_at(temp[4], 50, 260);
 }
 
+// FIXME: something very wrong with this function, often causes crash
 void display_update(float temp[], int size) 
 {  
-    for(int i=0; i< size; i++)
-      Serial.println(temp[i]);
+    updateTankBottom(temp[0], temp[1], temp[2]);
+    updateTankTop(temp[3]);
+    updatePump(temp[4]);
+}
 
+static void updateTankTop(float temp)
+{
+    int w = 131, h = 83;
     int x = 10, y = 10;
+    tft.drawBitmap(x, y, water_tank_top, w, h, temp2colour(temp));
+}
 
-    int w_bottom = 131, h_bottom = 55;
-    int w_top = 131, h_top = 83;
-    int w_pump = 86, h_pump = 60;
+static void updateTankBottom(float temp1, float temp2, float temp3)
+{
+  int w = 131, h = 55;
+  int x = 10, y = 10;
+  tft.drawBitmap(x, y+148, water_tank_bottom, w, h, temp2colour(temp1));    
+  tft.drawBitmap(x, y+108, water_tank_bottom, w, h, temp2colour(temp2));
+  tft.drawBitmap(x, y+68, water_tank_bottom, w, h, temp2colour(temp3));
+}
 
-    const int SZ = 131*83 / 8;
-uint8_t sram[SZ];
-    
-    memcpy_P(sram, water_tank_bottom, sram);
-
-    //tft.fillScreen(BLACK);
-    tft.drawBitmap(x, y+148, water_tank_bottom, w_bottom, h_bottom, temp2colour(temp[0]));    
-    tft.drawBitmap(x, y+108, water_tank_bottom, w_bottom, h_bottom, temp2colour(temp[1]));
-    tft.drawBitmap(x, y+68, water_tank_bottom, w_bottom, h_bottom, temp2colour(temp[2]));
-
-    memcpy_P(sram, water_tank_top, sram);
-    tft.drawBitmap(x, y, water_tank_top, w_top, h_top, temp2colour(temp[3]));
-
-    memcpy_P(sram, pump, sram);
-    tft.drawBitmap(135, 240, pump, w_pump, h_pump, temp2colour(temp[4]));
+static void updatePump(float temp)
+{
+  int w = 86, h = 60;
+  int x = 10, y = 10;
+  tft.drawBitmap(135, 240, pump, w, h, temp2colour(temp));
 }
 
 void display_refresh(void)

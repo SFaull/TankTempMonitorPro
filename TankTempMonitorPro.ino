@@ -4,6 +4,8 @@
 #include "commands.h"
 #include "display.h"
 
+
+
 timer_t sensorReadTimer;
 timer_t mqttPublishTimer;
 timer_t displayRefreshTimer;
@@ -25,7 +27,7 @@ void setup()
   commands_init();
   timers_init();
   display_clear();
-  updateDisplay();
+  //updateDisplay();
 }
 
 void loop() 
