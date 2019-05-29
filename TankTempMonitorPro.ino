@@ -3,7 +3,8 @@
 #include "config.h"
 #include "commands.h"
 #include "display.h"
-
+#include "wireless.h"
+#include "version.h"
 
 
 timer_t sensorReadTimer;
@@ -22,12 +23,16 @@ void setup()
 {
   display_init();
   display_splash();
+  
   Serial.begin(SERIAL_BAUD_RATE);
+  Serial.println(DEVICE_NAME);
+  Serial.println(VERSION_STRING);
+  
   temperature_init();
   commands_init();
   timers_init();
   display_clear();
-  //updateDisplay();
+  updateDisplay();
 }
 
 void loop() 
