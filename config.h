@@ -39,3 +39,9 @@
 #define ADDRESS_TANK_MID_LO "2836DC45921902DA"
 #define ADDRESS_TANK_BOT    "2865F2459209021B"
 #define ADDRESS_PUMP        "281B3B4592060259"
+
+/* Enable averaging on the temperature measurements */
+#define ENABLE_AVERAGING
+
+/* moving average alpha value (between 0 and 1) */
+#define AVG_TEMP_FILTER_FACTOR 0.125

@@ -9,6 +9,7 @@ typedef struct
 {
   DeviceAddress address;
   float temperature = -1.0;
+  float temperatureAve = -1.0;
 } sensor_t;
 
 extern sensor_t mySensor[SENSOR_COUNT];
