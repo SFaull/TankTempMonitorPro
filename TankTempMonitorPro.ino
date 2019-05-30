@@ -4,6 +4,7 @@
 #include "commands.h"
 #include "display.h"
 #include "wireless.h"
+#include "structs.h"
 #include "version.h"
 
 
@@ -66,11 +67,7 @@ void loop()
 }
 
 void updateDisplay(void)
-{
-      float temp_array[SENSOR_COUNT] = {0};
-    for(int i=0; i<SENSOR_COUNT; i++)
-      temp_array[i] = temperature_get(i);
-      
-   display_update(temp_array, SENSOR_COUNT);
-   display_update2(temp_array, SENSOR_COUNT);
+{      
+   display_update();
+   display_update2();
 }

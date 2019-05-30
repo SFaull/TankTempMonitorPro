@@ -1,6 +1,8 @@
 #include "display.h"
 #include "image.h"
 #include "config.h"
+#include "structs.h"
+#include "temperature.h"
 /*
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
@@ -35,9 +37,9 @@ typedef struct
 static int temp2colour(float temp);
 static void print_float_at(float val, int x, int y);
 
-static void updateTankTop(float temp);
-static void updateTankBottom(float temp1, float temp2, float temp3);
-static void updatePump(float temp);
+static void updateTankTop(void);
+static void updateTankBottom(void);
+static void updatePump(void);
 
 MCUFRIEND_kbv tft;
 uint16_t ID;
@@ -52,44 +54,44 @@ void display_init(void)
   tft.setRotation(2);
 }
 
-void display_update2(float temp[], int size)
+void display_update2()
 {
-    print_float_at(temp[3], 150, 50);
-    print_float_at(temp[2], 150, 90);
-    print_float_at(temp[1], 150, 130);
-    print_float_at(temp[0], 150, 170);
-    print_float_at(temp[4], 50, 260);
+    print_float_at(temperature_get(kTop), 150, 50);
+    print_float_at(temperature_get(kMidHi), 150, 90);
+    print_float_at(temperature_get(kMidLo), 150, 130);
+    print_float_at(temperature_get(kBottom), 150, 170);
+    print_float_at(temperature_get(kPump), 50, 260);
 }
 
 // FIXME: something very wrong with this function, often causes crash
-void display_update(float temp[], int size) 
+void display_update() 
 {  
-    updateTankBottom(temp[0], temp[1], temp[2]);
-    updateTankTop(temp[3]);
-    updatePump(temp[4]);
+    updateTankBottom();
+    updateTankTop();
+    updatePump();
 }
 
-static void updateTankTop(float temp)
+static void updateTankTop(void)
 {
     int w = 131, h = 83;
     int x = 10, y = 10;
-    tft.drawBitmap(x, y, water_tank_top, w, h, temp2colour(temp));
+    tft.drawBitmap(x, y, water_tank_top, w, h, temp2colour(temperature_get(kTop)));
 }
 
-static void updateTankBottom(float temp1, float temp2, float temp3)
+static void updateTankBottom(void)
 {
   int w = 131, h = 55;
   int x = 10, y = 10;
-  tft.drawBitmap(x, y+148, water_tank_bottom, w, h, temp2colour(temp1));    
-  tft.drawBitmap(x, y+108, water_tank_bottom, w, h, temp2colour(temp2));
-  tft.drawBitmap(x, y+68, water_tank_bottom, w, h, temp2colour(temp3));
+  tft.drawBitmap(x, y+148, water_tank_bottom, w, h, temp2colour(temperature_get(kBottom)));    
+  tft.drawBitmap(x, y+108, water_tank_bottom, w, h, temp2colour(temperature_get(kMidLo)));
+  tft.drawBitmap(x, y+68, water_tank_bottom, w, h, temp2colour(temperature_get(kMidHi)));
 }
 
-static void updatePump(float temp)
+static void updatePump(void)
 {
   int w = 86, h = 60;
   int x = 10, y = 10;
-  tft.drawBitmap(135, 240, pump, w, h, temp2colour(temp));
+  tft.drawBitmap(135, 240, pump, w, h, temp2colour(temperature_get(kPump)));
 }
 
 void display_refresh(void)

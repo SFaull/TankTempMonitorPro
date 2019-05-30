@@ -1,4 +1,4 @@
-//#define DEBUG
+#define DEBUG
 //#define ENABLE_WIRELESS
 
 /* General */
@@ -28,3 +28,14 @@
   #define MQTT_PASSWORD           "password"
   #define MQTT_PORT               16601
 #endif
+
+
+
+
+/* Task sesnor addresses */
+/* This section allows you to map any given sensor to a physical location via the sensors unique address */
+#define ADDRESS_TANK_TOP    "2804D045920C026B"
+#define ADDRESS_TANK_MID_HI "28263E7997020326"
+#define ADDRESS_TANK_MID_LO "2836DC45921902DA"
+#define ADDRESS_TANK_BOT    "2865F2459209021B"
+#define ADDRESS_PUMP        "281B3B4592060259"

@@ -11,7 +11,6 @@ typedef struct
   float temperature = -1.0;
 } sensor_t;
 
-
 extern sensor_t mySensor[SENSOR_COUNT];
 
 void ds18b20_init(void);
