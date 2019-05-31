@@ -4,6 +4,6 @@
 void display_init(void);
 void display_splash(void);
 void display_refresh();
-void display_update(float temp[], int size) ;
-void display_update2(float temp[], int size) ;
+void display_update(void) ;
+void display_update2(void) ;
 void display_clear(void);

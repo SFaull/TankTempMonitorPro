@@ -1,6 +1,8 @@
 #include "display.h"
 #include "image.h"
 #include "config.h"
+#include "structs.h"
+#include "temperature.h"
 /*
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
@@ -35,6 +37,10 @@ typedef struct
 static int temp2colour(float temp);
 static void print_float_at(float val, int x, int y);
 
+static void updateTankTop(void);
+static void updateTankBottom(void);
+static void updatePump(void);
+
 MCUFRIEND_kbv tft;
 uint16_t ID;
 systemInfo_t mySystem;
@@ -48,41 +54,44 @@ void display_init(void)
   tft.setRotation(2);
 }
 
-void display_update2(float temp[], int size)
+void display_update2()
 {
-    print_float_at(temp[3], 150, 50);
-    print_float_at(temp[2], 150, 90);
-    print_float_at(temp[1], 150, 130);
-    print_float_at(temp[0], 150, 170);
-    print_float_at(temp[4], 50, 260);
+    print_float_at(temperature_get(kTop), 150, 50);
+    print_float_at(temperature_get(kMidHi), 150, 90);
+    print_float_at(temperature_get(kMidLo), 150, 130);
+    print_float_at(temperature_get(kBottom), 150, 170);
+    print_float_at(temperature_get(kPump), 50, 260);
 }
 
-void display_update(float temp[], int size) 
+// FIXME: something very wrong with this function, often causes crash
+void display_update() 
 {  
-    for(int i=0; i< size; i++)
-      Serial.println(temp[i]);
+    updateTankBottom();
+    updateTankTop();
+    updatePump();
+}
 
+static void updateTankTop(void)
+{
+    int w = 131, h = 83;
     int x = 10, y = 10;
+    tft.drawBitmap(x, y, water_tank_top, w, h, temp2colour(temperature_get(kTop)));
+}
 
-    int w_bottom = 131, h_bottom = 55;
-    int w_top = 131, h_top = 83;
-    int w_pump = 86, h_pump = 60;
+static void updateTankBottom(void)
+{
+  int w = 131, h = 55;
+  int x = 10, y = 10;
+  tft.drawBitmap(x, y+148, water_tank_bottom, w, h, temp2colour(temperature_get(kBottom)));    
+  tft.drawBitmap(x, y+108, water_tank_bottom, w, h, temp2colour(temperature_get(kMidLo)));
+  tft.drawBitmap(x, y+68, water_tank_bottom, w, h, temp2colour(temperature_get(kMidHi)));
+}
 
-    const int SZ = 131*83 / 8;
-uint8_t sram[SZ];
-    
-    memcpy_P(sram, water_tank_bottom, sram);
-
-    //tft.fillScreen(BLACK);
-    tft.drawBitmap(x, y+148, water_tank_bottom, w_bottom, h_bottom, temp2colour(temp[0]));    
-    tft.drawBitmap(x, y+108, water_tank_bottom, w_bottom, h_bottom, temp2colour(temp[1]));
-    tft.drawBitmap(x, y+68, water_tank_bottom, w_bottom, h_bottom, temp2colour(temp[2]));
-
-    memcpy_P(sram, water_tank_top, sram);
-    tft.drawBitmap(x, y, water_tank_top, w_top, h_top, temp2colour(temp[3]));
-
-    memcpy_P(sram, pump, sram);
-    tft.drawBitmap(135, 240, pump, w_pump, h_pump, temp2colour(temp[4]));
+static void updatePump(void)
+{
+  int w = 86, h = 60;
+  int x = 10, y = 10;
+  tft.drawBitmap(135, 240, pump, w, h, temp2colour(temperature_get(kPump)));
 }
 
 void display_refresh(void)
@@ -107,6 +116,7 @@ void display_splash(void)
 void display_clear(void)
 {
   tft.fillScreen(BLACK);
+  tft.fillScreen(BLACK);
 }
 
 static int temp2colour(float temp)
@@ -124,7 +134,8 @@ static int temp2colour(float temp)
 static void print_float_at(float val, int x, int y)
 {
     char buf[10];
-    int16_t x1, y1, w, h;
+    int16_t x1, y1;
+    uint16_t w, h;
     tft.getTextBounds("000.0", x, y, &x1, &y1, &w, &h); 
     dtostrf(val, 5, 1, buf);   //e.g. 123.4
     tft.fillRect(x1, y1, w, h, BLACK);

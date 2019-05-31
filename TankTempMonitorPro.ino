@@ -3,6 +3,10 @@
 #include "config.h"
 #include "commands.h"
 #include "display.h"
+#include "wireless.h"
+#include "structs.h"
+#include "version.h"
+
 
 timer_t sensorReadTimer;
 timer_t mqttPublishTimer;
@@ -20,7 +24,11 @@ void setup()
 {
   display_init();
   display_splash();
+  
   Serial.begin(SERIAL_BAUD_RATE);
+  Serial.println(DEVICE_NAME);
+  Serial.println(VERSION_STRING);
+  
   temperature_init();
   commands_init();
   timers_init();
@@ -59,11 +67,7 @@ void loop()
 }
 
 void updateDisplay(void)
-{
-      float temp_array[SENSOR_COUNT] = {0};
-    for(int i=0; i<SENSOR_COUNT; i++)
-      temp_array[i] = temperature_get(i);
-      
-   display_update(temp_array, SENSOR_COUNT);
-   display_update2(temp_array, SENSOR_COUNT);
+{      
+   display_update();
+   display_update2();
 }
