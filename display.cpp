@@ -116,6 +116,7 @@ void display_splash(void)
 void display_clear(void)
 {
   tft.fillScreen(BLACK);
+  tft.fillScreen(BLACK);
 }
 
 static int temp2colour(float temp)
@@ -133,7 +134,8 @@ static int temp2colour(float temp)
 static void print_float_at(float val, int x, int y)
 {
     char buf[10];
-    int16_t x1, y1, w, h;
+    int16_t x1, y1;
+    uint16_t w, h;
     tft.getTextBounds("000.0", x, y, &x1, &y1, &w, &h); 
     dtostrf(val, 5, 1, buf);   //e.g. 123.4
     tft.fillRect(x1, y1, w, h, BLACK);
