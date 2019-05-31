@@ -1,8 +1,8 @@
-#define DEBUG
-//#define ENABLE_WIRELESS
+//#define DEBUG
+#define ENABLE_WIRELESS
 
 /* General */
-#define DEVICE_NAME             "TankTempMonitor"
+#define DEVICE_NAME             "TankTempMonitorPro"
 #define SERIAL_BAUD_RATE        115200
 #define MQTT_PUBLISH_INTERVAL   5000 // 5 seconds
 /* Pinout */

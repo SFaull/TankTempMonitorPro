@@ -32,6 +32,7 @@ void setup()
   temperature_init();
   commands_init();
   timers_init();
+  wireless_init();
   display_clear();
   updateDisplay();
 }
@@ -64,6 +65,7 @@ void loop()
   // OTA process
   
   commands_process();
+  wireless_process();
 }
 
 void updateDisplay(void)

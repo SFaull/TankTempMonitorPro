@@ -1,7 +1,19 @@
 #include "wireless.h"
+#include "config.h"
 #ifdef ENABLE_WIRELESS
-  #include <WiFiManager.h>
-  #include <ESP8266WiFi.h>
+
+  #if defined(ESP8266)
+    #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
+  #else
+    #include <WiFi.h>          //https://github.com/esp8266/Arduino
+  #endif
+  #include <DNSServer.h>
+  #if defined(ESP8266)
+    #include <ESP8266WebServer.h>
+  #else
+    #include <WebServer.h>
+  #endif
+  #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
   #include <PubSubClient.h>
   #include <ArduinoOTA.h>
   #include <WifiUDP.h>
@@ -21,9 +33,9 @@
   
   void wireless_init(void)
   {
-    OTA_init();
+    //OTA_init();
     wifi_init();
-    mqtt_init();
+    //mqtt_init();
   }
   
   void wireless_process(void)
@@ -41,10 +53,10 @@
     bool connectionSuccess = wifiManager.autoConnect(DEVICE_NAME);  
     if (!connectionSuccess) 
     {
-      Serial.println("Connection failed... restarting");
-      ESP.reset(); // This is a bit crude. For some unknown reason webserver can only be started once per boot up 
+      //Serial.println("Connection failed... restarting");
+      //ESP.reset(); // This is a bit crude. For some unknown reason webserver can only be started once per boot up 
       // so resetting the device allows to go back into config mode again when it reboots.
-      delay(5000);
+      //delay(5000);
     } 
   }
   
@@ -64,9 +76,9 @@
       // its been 1 minute, probably not gonna reconnect, lets reset.
       if(seconds > 60)
       {
-          ESP.reset(); // This is a bit crude. For some unknown reason webserver can only be started once per boot up 
+          //ESP.reset(); // This is a bit crude. For some unknown reason webserver can only be started once per boot up 
           // so resetting the device allows to go back into config mode again when it reboots.
-          delay(5000);
+          //delay(5000);
       }
     }
   }
@@ -99,11 +111,8 @@
           Serial.print("failed, rc=");
           Serial.print(client.state());
           Serial.print(" try again in 5 seconds");
-          ledController.setColour(WS2812_BRIGHTNESS,0,0);
           // Wait 5 seconds before retrying and flash LED red
-          delay(3000);
-          ledController.setColour(0,0,0);
-          delay(2000);
+          delay(5000);
         }
       }
     }
@@ -136,7 +145,6 @@
       if(strcmp(input,"*RST")==0)
       {
         // give info
-        ledController.setColour(WS2812_BRIGHTNESS,0,0);
         client.disconnect();
         WiFiManager wifiManager;
         wifiManager.resetSettings();

@@ -109,7 +109,8 @@ void display_splash(void)
   tft.setTextColor(RED, BLACK);
   tft.setTextSize(3);
   tft.setCursor(0, 0);
-  tft.print("Booting up...");
+  tft.println("Booting up...");
+  tft.println("No WiFi");
 }
 
 
