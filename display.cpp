@@ -3,29 +3,15 @@
 #include "config.h"
 #include "structs.h"
 #include "temperature.h"
-/*
-#include <Fonts/FreeSans9pt7b.h>
-#include <Fonts/FreeSans12pt7b.h>
-#include <Fonts/FreeSerif12pt7b.h>
-#include <FreeDefaultFonts.h>
+#include <TFT_eSPI.h>
 
-#define LCD_CS    A3
-#define LCD_CD    A2
-#define LCD_WR    A1
-#define LCD_RD    A0
-#define LCD_RESET A4
-*/
+#define ST7789_BLK 15 // GPIO15 (d8)
 
-#define BLACK   0x0000
-#define BLUE    0x001F
-#define RED     0xF800
-#define GREEN   0x07E0
-#define CYAN    0x07FF
-#define MAGENTA 0xF81F
-#define YELLOW  0xFFE0
-#define WHITE   0xFFFF
-#define GREY    0x8410
-#define ORANGE  0xE880
+TFT_eSPI tft = TFT_eSPI();   // Invoke library
+TFT_eSprite tankOutline = TFT_eSprite(&tft); // Sprite object tankOutline
+TFT_eSprite tankInside = TFT_eSprite(&tft); // Sprite object tankInside
+TFT_eSprite textOverlay = TFT_eSprite(&tft); // Sprite object tankInside
+
 
 typedef struct 
 {
@@ -35,113 +21,74 @@ typedef struct
 } systemInfo_t;
 
 static int temp2colour(float temp);
-static void print_float_at(float val, int x, int y);
 
-static void updateTankTop(void);
-static void updateTankBottom(void);
-static void updatePump(void);
-
-MCUFRIEND_kbv tft;
 uint16_t ID;
 systemInfo_t mySystem;
 
 
 void display_init(void)
 {
-  ID = tft.readID();
-  if (ID == 0xD3) ID = 0x9481;
-  tft.begin(ID);
-  tft.setRotation(2);
-}
+  pinMode(ST7789_BLK, OUTPUT);
+  digitalWrite(ST7789_BLK, HIGH);
 
-void display_update2()
-{
-    print_float_at(temperature_get(kTop), 150, 50);
-    print_float_at(temperature_get(kMidHi), 150, 90);
-    print_float_at(temperature_get(kMidLo), 150, 130);
-    print_float_at(temperature_get(kBottom), 150, 170);
-    print_float_at(temperature_get(kPump), 50, 260);
-}
+  tft.begin();     // initialize a ST7789 chip
+  tft.setSwapBytes(true); // Swap the byte order for pushImage() - corrects endianness
 
-// FIXME: something very wrong with this function, often causes crash
-void display_update() 
-{  
-    updateTankBottom();
-    updateTankTop();
-    updatePump();
-}
-
-static void updateTankTop(void)
-{
-    int w = 131, h = 83;
-    int x = 10, y = 10;
-    tft.drawBitmap(x, y, water_tank_top, w, h, temp2colour(temperature_get(kTop)));
-}
-
-static void updateTankBottom(void)
-{
-  int w = 131, h = 55;
-  int x = 10, y = 10;
-  tft.drawBitmap(x, y+148, water_tank_bottom, w, h, temp2colour(temperature_get(kBottom)));    
-  tft.drawBitmap(x, y+108, water_tank_bottom, w, h, temp2colour(temperature_get(kMidLo)));
-  tft.drawBitmap(x, y+68, water_tank_bottom, w, h, temp2colour(temperature_get(kMidHi)));
-}
-
-static void updatePump(void)
-{
-  int w = 86, h = 60;
-  int x = 10, y = 10;
-  tft.drawBitmap(135, 240, pump, w, h, temp2colour(temperature_get(kPump)));
-}
-
-void display_refresh(void)
-{  
-  tft.fillScreen(BLACK);
-  tft.setTextColor(GREEN, BLACK);
-  tft.setTextSize(3);
-  tft.setCursor(0, 0);
-  tft.print("Ready...");
+  tft.fillScreen(TFT_BLACK);
 }
 
 void display_splash(void)
 {
-  tft.fillScreen(BLACK);
-  tft.setTextColor(RED, BLACK);
   tft.setTextSize(3);
-  tft.setCursor(0, 0);
-  tft.println("Booting up...");
-  tft.println("No WiFi");
+  tft.setTextFont(2);
+  tft.drawString("BOOTING....", 0, 0);
+}
+
+// FIXME: something very wrong with this function, often causes crashvoid display_update() 
+void display_update()
+{  
+    // Create a sprite for the text overlay
+  textOverlay.setColorDepth(1);
+  textOverlay.createSprite(240, 240);
+  textOverlay.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
+  textOverlay.setTextSize(3);
+  textOverlay.setTextFont(2);
+  textOverlay.drawString("24.3", 19, 15);
+  textOverlay.drawString("24.3", 19, 66);
+  textOverlay.drawString("24.3", 19, 124);
+  textOverlay.drawString("24.3", 19, 179);
+  textOverlay.drawString("24.3", 135, 190);
+
+  // draw the tank graphic
+  tft.drawBitmap(3,4,tank_top, 115, 58, TFT_RED);
+  tft.fillRect(3,65,115, 53, TFT_BLUE);
+  tft.fillRect(3,121,115, 56, TFT_BLUE);
+  tft.drawBitmap(3,180,tank_bottom, 115, 56, TFT_BLUE);
+  tft.drawBitmap(0,0,tank_outline, 121, 240, TFT_WHITE);
+
+  tft.drawBitmap(142,120,pump_inside, 73, 64, TFT_RED);
+  tft.drawBitmap(142,120,pump_outline, 73, 64, TFT_WHITE);
+  
+
+  // overlay the text srite we created ealier
+  //tft.setBitmapColor(TFT_WHITE, TFT_BLACK); // Specify the colours of the ON and OFF pixels
+  textOverlay.pushSprite(0, 0, TFT_BLACK);  // specify "BLACK" as the transparent colour
 }
 
 
 void display_clear(void)
 {
-  tft.fillScreen(BLACK);
-  tft.fillScreen(BLACK);
+  tft.fillScreen(TFT_BLACK);
 }
 
 static int temp2colour(float temp)
 {
   if(temp < 0)
-    return GREY;  // probably an error
+    return TFT_LIGHTGREY;  // probably an error
   if(temp < TEMP_COLD)
-    return BLUE;
+    return TFT_BLUE;
   else if (temp < TEMP_HOT)
-    return GREEN;
+    return TFT_GREEN;
   else
-    return RED;  
-}
-
-static void print_float_at(float val, int x, int y)
-{
-    char buf[10];
-    int16_t x1, y1;
-    uint16_t w, h;
-    tft.getTextBounds("000.0", x, y, &x1, &y1, &w, &h); 
-    dtostrf(val, 5, 1, buf);   //e.g. 123.4
-    tft.fillRect(x1, y1, w, h, BLACK);
-    tft.setTextColor(WHITE);
-    tft.setTextSize(2);
-    tft.setCursor(x, y);
-    tft.print(buf);
+    return TFT_RED;  
 }

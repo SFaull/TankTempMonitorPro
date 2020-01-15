@@ -34,7 +34,7 @@ void setup()
   timers_init();
   wireless_init();
   display_clear();
-  updateDisplay();
+  display_update();
 }
 
 void loop() 
@@ -55,7 +55,7 @@ void loop()
   // update TFT display. TODO: only update if value has changed
   if(timer_expired(displayRefreshTimer, DISPLAY_UPDATE_INTERVAL))
   {  
-    updateDisplay();
+    display_update();
     timer_set(&displayRefreshTimer);    
   }
   
@@ -66,10 +66,4 @@ void loop()
   
   commands_process();
   wireless_process();
-}
-
-void updateDisplay(void)
-{      
-   display_update();
-   display_update2();
 }
