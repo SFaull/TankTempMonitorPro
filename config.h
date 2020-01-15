@@ -6,7 +6,7 @@
 #define SERIAL_BAUD_RATE        115200
 #define MQTT_PUBLISH_INTERVAL   5000 // 5 seconds
 /* Pinout */
-#define ONE_WIRE_BUS A5  // onewire sensors are connected to pin A5
+#define ONE_WIRE_BUS 5  // onewire sensors are connected to pin A5
 /* Sensors */
 #define SENSOR_READ_INTERVAL 1000  // read sensors every second
 /* Display */

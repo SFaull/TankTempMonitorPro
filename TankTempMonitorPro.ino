@@ -65,5 +65,5 @@ void loop()
   // OTA process
   
   commands_process();
-  wireless_process();
+  //wireless_process();
 }
