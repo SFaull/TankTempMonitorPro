@@ -77,17 +77,22 @@ void ds18b20_request(void)
 float alpha = 0.125;
 
 void ds18b20_getTemp(void)
-{
+{  
   for (int i=0; i<deviceCount; i++)
   {  
     //mySensor[i].temperature = sensors.getTempCByIndex(i);
 
     // store the raw temperature reading
     mySensor[i].temperature = sensors.getTempC(mySensor[i].address);
+
+    if(mySensor[i].sampleCount <= 0)
+      mySensor[i].temperatureAve = mySensor[i].temperature;
     
-    // compute the fading memory (exponential) moving average: ma_new = alpha * new_sample + (1-alpha) * ma_old
+    // compute the fading memory (exponential) moving average: ma_new = alpha * new_sample + (1-alpha) * ma_old 
     mySensor[i].temperatureAve *= (1-AVG_TEMP_FILTER_FACTOR);
     mySensor[i].temperatureAve += AVG_TEMP_FILTER_FACTOR * mySensor[i].temperature;
+
+    mySensor[i].sampleCount++;
     
     #ifdef DEBUG
       Serial.print("Sensor ");
