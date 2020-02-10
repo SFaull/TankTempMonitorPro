@@ -4,9 +4,11 @@
 #include "structs.h"
 #include "temperature.h"
 #include <TFT_eSPI.h>
+#include "qrcode.h" // https://github.com/ricmoo/QRCode
 
 TFT_eSPI tft = TFT_eSPI();   // Invoke library
 TFT_eSprite textOverlay = TFT_eSprite(&tft); // Sprite object tankInside
+QRCode qrcode;
 
 typedef struct 
 {
@@ -15,6 +17,7 @@ typedef struct
   int pump;
 } systemInfo_t;
 
+static void display_QRcode_advanced(int offset_x, int offset_y, int element_size, int QRsize, int ECC_Mode, const char* Message);
 static int temp2colour(float temp);
 
 uint16_t ID;
@@ -68,6 +71,38 @@ void display_update()
   textOverlay.pushSprite(0, 0, TFT_BLACK);  // specify "BLACK" as the transparent colour
 
   textOverlay.deleteSprite();
+}
+
+void display_QRcode(const char* Message)
+{
+  tft.fillScreen(TFT_BLACK);
+  tft.fillRect(12,12,215,215, TFT_WHITE);
+  display_QRcode_advanced(17,17,5,6,2,Message);
+}
+
+void display_QRcode_advanced(int offset_x, int offset_y, int element_size, int QRsize, int ECC_Mode, const char* Message)
+{
+  uint8_t qrcodeData[qrcode_getBufferSize(QRsize)];
+  //ECC_LOW, ECC_MEDIUM, ECC_QUARTILE and ECC_HIGH. Higher levels of error correction sacrifice data capacity, but ensure damaged codes remain readable.
+  if (ECC_Mode%4 == 0) qrcode_initText(&qrcode, qrcodeData, QRsize, ECC_LOW, Message);
+  if (ECC_Mode%4 == 1) qrcode_initText(&qrcode, qrcodeData, QRsize, ECC_MEDIUM, Message);
+  if (ECC_Mode%4 == 2) qrcode_initText(&qrcode, qrcodeData, QRsize, ECC_QUARTILE, Message);
+  if (ECC_Mode%4 == 3) qrcode_initText(&qrcode, qrcodeData, QRsize, ECC_HIGH, Message);
+  
+  for (int y = 0; y < qrcode.size; y++) 
+  {
+    for (int x = 0; x < qrcode.size; x++) 
+    {
+      if (qrcode_getModule(&qrcode, x, y)) 
+      {
+        tft.fillRect(x*element_size+offset_x,y*element_size+offset_y,element_size,element_size, TFT_BLACK);
+      }
+      else 
+      {
+        tft.fillRect(x*element_size+offset_x,y*element_size+offset_y,element_size,element_size, TFT_WHITE);
+      }
+    }
+  }
 }
 
 

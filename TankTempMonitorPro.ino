@@ -26,6 +26,7 @@ void setup()
   ledcSetup(BACKLIGHT_PWM_CHANNEL, BACKLIGHT_PWM_FREQ, BACKLIGHT_PWM_RES);
   // attach the channel to the GPIO to be controlled
   ledcAttachPin(BACKLIGHT_PWM_PIN, BACKLIGHT_PWM_CHANNEL);  
+  ledcWrite(BACKLIGHT_PWM_CHANNEL, 255);
   
   display_init();
   display_splash();
