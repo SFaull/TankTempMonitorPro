@@ -5,11 +5,8 @@
 #include "temperature.h"
 #include <TFT_eSPI.h>
 
-#define ST7789_BLK 13 // GPIO13 (d13)
-
 TFT_eSPI tft = TFT_eSPI();   // Invoke library
 TFT_eSprite textOverlay = TFT_eSprite(&tft); // Sprite object tankInside
-
 
 typedef struct 
 {
@@ -26,9 +23,6 @@ systemInfo_t mySystem;
 
 void display_init(void)
 {
-  pinMode(ST7789_BLK, OUTPUT);
-  digitalWrite(ST7789_BLK, HIGH);
-
   tft.begin();     // initialize a ST7789 chip
   tft.setSwapBytes(true); // Swap the byte order for pushImage() - corrects endianness
 

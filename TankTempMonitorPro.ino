@@ -6,7 +6,7 @@
 #include "wireless.h"
 #include "structs.h"
 #include "version.h"
-
+#include "Arduino.h"
 
 timer_t sensorReadTimer;
 timer_t mqttPublishTimer;
@@ -22,6 +22,11 @@ void timers_init(void)
 
 void setup() 
 {
+  // configure pwm for backlight contorl
+  ledcSetup(BACKLIGHT_PWM_CHANNEL, BACKLIGHT_PWM_FREQ, BACKLIGHT_PWM_RES);
+  // attach the channel to the GPIO to be controlled
+  ledcAttachPin(BACKLIGHT_PWM_PIN, BACKLIGHT_PWM_CHANNEL);  
+  
   display_init();
   display_splash();
   
@@ -39,31 +44,31 @@ void setup()
 
 void loop() 
 {
-  // take sensor readings
-  if(timer_expired(sensorReadTimer, SENSOR_READ_INTERVAL))
-  {  
-    temperature_update();
-    timer_set(&sensorReadTimer);
-  }
+  /* convert light level to backlight intensity */
+   int reading = analogRead(LDR_PIN);
+   int brightness = map(reading, 0, 4096, 15, 255);
+   ledcWrite(BACKLIGHT_PWM_CHANNEL, brightness);
 
-  // publish sensor readings to MQTT channel
-  if(timer_expired(mqttPublishTimer, MQTT_PUBLISH_INTERVAL))
-  {  
-    timer_set(&mqttPublishTimer);
-  }
+    // take sensor readings
+    if(timer_expired(sensorReadTimer, SENSOR_READ_INTERVAL))
+    {  
+      temperature_update();
+      timer_set(&sensorReadTimer);
+    }
+  
+    // update TFT display. TODO: only update if value has changed
+    if(timer_expired(displayRefreshTimer, DISPLAY_UPDATE_INTERVAL))
+    {  
+      display_update();
+      timer_set(&displayRefreshTimer);    
+    }
+    
+    // TODO
+    // check touch screen input
+    // wifi process
+    // OTA process
+    
+    commands_process();
+    //wireless_process();
 
-  // update TFT display. TODO: only update if value has changed
-  if(timer_expired(displayRefreshTimer, DISPLAY_UPDATE_INTERVAL))
-  {  
-    display_update();
-    timer_set(&displayRefreshTimer);    
-  }
-  
-  // TODO
-  // check touch screen input
-  // wifi process
-  // OTA process
-  
-  commands_process();
-  //wireless_process();
 }
