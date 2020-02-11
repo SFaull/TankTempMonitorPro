@@ -7,7 +7,7 @@
 #include "qrcode.h" // https://github.com/ricmoo/QRCode
 
 TFT_eSPI tft = TFT_eSPI();   // Invoke library
-TFT_eSprite textOverlay = TFT_eSprite(&tft); // Sprite object tankInside
+TFT_eSprite img = TFT_eSprite(&tft);  // framebuffer sprite
 QRCode qrcode;
 
 typedef struct 
@@ -23,13 +23,12 @@ static int temp2colour(float temp);
 uint16_t ID;
 systemInfo_t mySystem;
 
-
 void display_init(void)
 {
-  tft.begin();     // initialize a ST7789 chip
-  tft.setSwapBytes(true); // Swap the byte order for pushImage() - corrects endianness
-
+  tft.init();
   tft.fillScreen(TFT_BLACK);
+
+  img.createSprite(238, 238); // FIXME: this is the largest we can set the sprite size without the pushSprite function displaying a blank frame
 }
 
 void display_splash(void)
@@ -39,38 +38,32 @@ void display_splash(void)
   tft.drawString("BOOTING....", 0, 0);
 }
 
-// TODO: improve this function so that it doesn't flash every time it is updated. The whole frame should be drawn as a sprite and then pushed
 void display_update()
 {  
-    // Create a sprite for the text overlay
-  textOverlay.setColorDepth(1);
-  textOverlay.createSprite(240, 240);
-  //textOverlay.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
-  textOverlay.setTextSize(3);
-  textOverlay.setTextFont(2);
-  textOverlay.drawFloat(temperature_get(kTop), 1, 19, 15);
-  textOverlay.drawFloat(temperature_get(kMidHi), 1,19, 66);
-  textOverlay.drawFloat(temperature_get(kMidLo), 1,19, 124);
-  textOverlay.drawFloat(temperature_get(kBottom), 1,19, 179);
-  textOverlay.drawFloat(temperature_get(kPump), 1,135, 190);
+  img.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
+  img.setTextColor(TFT_WHITE);
+  img.setTextSize(3);
+  img.setTextFont(2);
 
-  // draw the tank graphic
-  tft.fillRect(135, 190, 105, 50, TFT_BLACK);  // this is necessary to remove the pump reading from the previous frame
-  tft.drawBitmap(3,4,tank_top, 115, 58, temp2colour(temperature_get(kTop)));
-  tft.fillRect(3,65,115, 53, temp2colour(temperature_get(kMidHi)));
-  tft.fillRect(3,121,115, 56, temp2colour(temperature_get(kMidLo)));
-  tft.drawBitmap(3,180,tank_bottom, 115, 56, temp2colour(temperature_get(kBottom)));
-  tft.drawBitmap(0,0,tank_outline, 121, 240, TFT_WHITE);
-
-  tft.drawBitmap(142,120,pump_inside, 73, 64, temp2colour(temperature_get(kPump)));
-  tft.drawBitmap(142,120,pump_outline, 73, 64, TFT_WHITE);
+    /* draw the tank graphic onto the display */
+  img.fillRect(135, 190, 105, 50, TFT_BLACK);  // this is necessary to remove the pump reading from the previous frame
+  img.drawBitmap(3,4,tank_top, 115, 58, temp2colour(temperature_get(kTop)));
+  img.fillRect(3,65,115, 53, temp2colour(temperature_get(kMidHi)));
+  img.fillRect(3,121,115, 56, temp2colour(temperature_get(kMidLo)));
+  img.drawBitmap(3,180,tank_bottom, 115, 56, temp2colour(temperature_get(kBottom)));
+  img.drawBitmap(0,0,tank_outline, 121, 240, TFT_WHITE);
+  img.drawBitmap(142,120,pump_inside, 73, 64, temp2colour(temperature_get(kPump)));
+  img.drawBitmap(142,120,pump_outline, 73, 64, TFT_WHITE);
   
+  /* draw the sensor data onto the sprite */
+  img.drawFloat(temperature_get(kTop), 1, 19, 15);
+  img.drawFloat(temperature_get(kMidHi), 1,19, 66);
+  img.drawFloat(temperature_get(kMidLo), 1,19, 124);
+  img.drawFloat(temperature_get(kBottom), 1,19, 179);
+  img.drawFloat(temperature_get(kPump), 1,135, 190);
 
-  // overlay the text srite we created ealier
-  //tft.setBitmapColor(TFT_WHITE, TFT_BLACK); // Specify the colours of the ON and OFF pixels
-  textOverlay.pushSprite(0, 0, TFT_BLACK);  // specify "BLACK" as the transparent colour
-
-  textOverlay.deleteSprite();
+  /* draw the sprite to the display as an overlay */
+  img.pushSprite(1, 1);  // specify "BLACK" as the transparent colour
 }
 
 void display_QRcode(const char* Message)
@@ -94,13 +87,9 @@ void display_QRcode_advanced(int offset_x, int offset_y, int element_size, int Q
     for (int x = 0; x < qrcode.size; x++) 
     {
       if (qrcode_getModule(&qrcode, x, y)) 
-      {
         tft.fillRect(x*element_size+offset_x,y*element_size+offset_y,element_size,element_size, TFT_BLACK);
-      }
       else 
-      {
         tft.fillRect(x*element_size+offset_x,y*element_size+offset_y,element_size,element_size, TFT_WHITE);
-      }
     }
   }
 }
