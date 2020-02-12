@@ -14,10 +14,11 @@ timer_t displayRefreshTimer;
 
 void timers_init(void)
 {
-  // reset timers
-  timer_set(&sensorReadTimer);
-  timer_set(&mqttPublishTimer);
-  timer_set(&displayRefreshTimer);
+  // Set all timers to a large value so that all the timers fire first time around the main loop
+  sensorReadTimer = 99999;
+  displayRefreshTimer = 99999;
+
+  timer_set(&mqttPublishTimer);   
 }
 
 void setup() 
@@ -40,7 +41,6 @@ void setup()
   timers_init();
   wireless_init();
   display_clear();
-  display_update();
 }
 
 void loop() 
@@ -53,23 +53,31 @@ void loop()
     // take sensor readings
     if(timer_expired(sensorReadTimer, SENSOR_READ_INTERVAL))
     {  
+      Serial.println("Sensor update request");
       temperature_update();
       timer_set(&sensorReadTimer);
     }
-  
-    // update TFT display. TODO: only update if value has changed
+
+       // update TFT display
     if(timer_expired(displayRefreshTimer, DISPLAY_UPDATE_INTERVAL))
     {  
+      Serial.println("Display update");
       display_update();
       timer_set(&displayRefreshTimer);    
     }
-    
+
+           // post MQTT
+    if(timer_expired(mqttPublishTimer, MQTT_PUBLISH_INTERVAL))
+    {  
+      Serial.println("MQTT update");
+      wireless_process();
+      timer_set(&mqttPublishTimer);    
+    }
+
     // TODO
     // check touch screen input
     // wifi process
     // OTA process
     
     commands_process();
-    //wireless_process();
-
 }

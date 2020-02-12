@@ -4,7 +4,7 @@
 /* General */
 #define DEVICE_NAME               "TankTempMonitorPro"
 #define SERIAL_BAUD_RATE          115200
-#define MQTT_PUBLISH_INTERVAL     5000 // 5 seconds
+#define MQTT_PUBLISH_INTERVAL     10000 // 10 seconds
 /* Pinout */
 #define ONE_WIRE_BUS              16  // onewire sensors are connected to pin A5
 #define LDR_PIN                   33
@@ -16,7 +16,7 @@
 /* Sensors */
 #define SENSOR_READ_INTERVAL      1000  // read sensors every second
 /* Display */
-#define DISPLAY_UPDATE_INTERVAL   4000 // update display every second
+#define DISPLAY_UPDATE_INTERVAL   1000 // update display every second
 /* Temperature preferences */
 #define TEMP_HOT  25
 #define TEMP_COLD 25
@@ -33,6 +33,7 @@
   #define MQTT_USERNAME           "username"
   #define MQTT_PASSWORD           "password"
   #define MQTT_PORT               16601
+  #define MQTT_TOPIC(x)         MQTT_ROOM "/" x
 #endif
 
 
