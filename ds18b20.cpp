@@ -9,6 +9,7 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 sensor_t mySensor[SENSOR_COUNT];
+float calibrationOffset[SENSOR_COUNT] = {OFFSET_TANK_TOP, OFFSET_TANK_MID_HI,  OFFSET_TANK_MID_LO, OFFSET_TANK_BOT,  OFFSET_PUMP};
 
 static int deviceCount;
 static void printAddress(DeviceAddress deviceAddress);
@@ -51,7 +52,9 @@ void ds18b20_init(void)
     /* set the resolution */
     sensors.setResolution(address, RESOLUTION);
 
-    #ifdef DEBUG
+    mySensor[position].offset = calibrationOffset[i];
+
+    //#ifdef DEBUG
       Serial.print("Sensor ");
       Serial.print(position);
       Serial.print(", Res: ");
@@ -60,7 +63,7 @@ void ds18b20_init(void)
       Serial.print(", Address: ");
       printAddress(mySensor[i].address);
       Serial.println("");
-    #endif
+    //#endif
   }
   
   sensors.setWaitForConversion(false);
@@ -74,20 +77,23 @@ void ds18b20_request(void)
   #endif
 }
 
-float alpha = 0.125;
-
 void ds18b20_getTemp(void)
-{
+{  
   for (int i=0; i<deviceCount; i++)
   {  
     //mySensor[i].temperature = sensors.getTempCByIndex(i);
 
     // store the raw temperature reading
-    mySensor[i].temperature = sensors.getTempC(mySensor[i].address);
+    mySensor[i].temperature = sensors.getTempC(mySensor[i].address) - mySensor[i].offset;
+
+    if(mySensor[i].sampleCount <= 0)
+      mySensor[i].temperatureAve = mySensor[i].temperature;
     
-    // compute the fading memory (exponential) moving average: ma_new = alpha * new_sample + (1-alpha) * ma_old
+    // compute the fading memory (exponential) moving average: ma_new = alpha * new_sample + (1-alpha) * ma_old 
     mySensor[i].temperatureAve *= (1-AVG_TEMP_FILTER_FACTOR);
     mySensor[i].temperatureAve += AVG_TEMP_FILTER_FACTOR * mySensor[i].temperature;
+
+    mySensor[i].sampleCount++;
     
     #ifdef DEBUG
       Serial.print("Sensor ");

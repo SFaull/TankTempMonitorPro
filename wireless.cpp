@@ -1,5 +1,8 @@
 #include "wireless.h"
 #include "config.h"
+#include "structs.h"
+#include "temperature.h"
+
 #ifdef ENABLE_WIRELESS
 
   #if defined(ESP8266)
@@ -35,14 +38,14 @@
   {
     //OTA_init();
     wifi_init();
-    //mqtt_init();
+    mqtt_init();
   }
   
   void wireless_process(void)
   {  
-    wifi_process();
+    //wifi_process();
     mqtt_process();
-    OTA_process();
+    //OTA_process();
   }
   
   static void wifi_init(void)
@@ -53,7 +56,7 @@
     bool connectionSuccess = wifiManager.autoConnect(DEVICE_NAME);  
     if (!connectionSuccess) 
     {
-      //Serial.println("Connection failed... restarting");
+      Serial.println("Connection failed");
       //ESP.reset(); // This is a bit crude. For some unknown reason webserver can only be started once per boot up 
       // so resetting the device allows to go back into config mode again when it reboots.
       //delay(5000);
@@ -91,13 +94,17 @@
   
   static void mqtt_process(void)
   {
+    /* Check wifi connection */
+    if(WiFi.status() != WL_CONNECTED)
+    {
+      Serial.println("MQTT publish failed, no wifi connection");
+      return;
+    } 
     
-    // check mqtt connection (TODO should have some timout on this.)
+    /* check mqtt connection */
     if (!client.connected())
     {
-      // Loop until we're reconnected
-      while (!client.connected())
-      {
+        Serial.println("No MQTT connection");
         Serial.print("Attempting MQTT connection... ");
         // Attempt to connect
         if (client.connect(DEVICE_NAME, MQTT_USERNAME, MQTT_PASSWORD))
@@ -108,13 +115,30 @@
         }
         else
         {
-          Serial.print("failed, rc=");
-          Serial.print(client.state());
-          Serial.print(" try again in 5 seconds");
-          // Wait 5 seconds before retrying and flash LED red
-          delay(5000);
+          Serial.print("failed: ");
+          Serial.println(client.state());
+          return;
         }
-      }
+    }
+
+    /* Post MQTT Message */
+    if(client.connected())
+    {
+      float temp[5];
+      for(int i=0; i<5; i++)
+        temp[i] = temperature_get((position_t)i);
+      String msg = String(temp[0]) + "," + String(temp[1]) + "," + String(temp[2]) + "," + String(temp[3]) + "," + String(temp[4]);
+      
+      client.publish(MQTT_TOPIC("RawData"), msg.c_str());
+      
+      client.publish(MQTT_TOPIC("Sensor1"), String(temp[0]).c_str());
+      client.publish(MQTT_TOPIC("Sensor2"), String(temp[1]).c_str());
+      client.publish(MQTT_TOPIC("Sensor3"), String(temp[2]).c_str());
+      client.publish(MQTT_TOPIC("Sensor4"), String(temp[3]).c_str());
+      client.publish(MQTT_TOPIC("Pump"),    String(temp[4]).c_str());
+      
+      Serial.print("Published: ");
+      Serial.println(msg);
     }
   
     client.loop();
