@@ -47,8 +47,15 @@
 #define ADDRESS_TANK_BOT          "2865F2459209021B"
 #define ADDRESS_PUMP              "281B3B4592060259"
 
+/* ~The values below will be subtracted from the raw temperature reading */
+#define OFFSET_TANK_TOP           0.4753
+#define OFFSET_TANK_MID_HI       -0.3628
+#define OFFSET_TANK_MID_LO        0.1583
+#define OFFSET_TANK_BOT          -0.1210
+#define OFFSET_PUMP               0.1501
+
 /* Enable averaging on the temperature measurements */
 #define ENABLE_AVERAGING
 
 /* moving average alpha value (between 0 and 1) */
-#define AVG_TEMP_FILTER_FACTOR      0.125
+#define AVG_TEMP_FILTER_FACTOR      0.2
