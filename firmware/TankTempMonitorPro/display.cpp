@@ -107,11 +107,11 @@ void display_update()
         img.drawBitmap(142,120,pump_outline, 73, 64, TFT_WHITE);
         
         /* draw the sensor data onto the sprite */
-        img.drawFloat(temperature_get(kTop), 1, 19, 15);
-        img.drawFloat(temperature_get(kMidHi), 1,19, 66);
-        img.drawFloat(temperature_get(kMidLo), 1,19, 124);
-        img.drawFloat(temperature_get(kBottom), 1,19, 179);
-        img.drawFloat(temperature_get(kPump), 1,135, 190);
+        img.drawFloat(temperature_get(kTop), 1, 62, 15);
+        img.drawFloat(temperature_get(kMidHi), 1,62, 66);
+        img.drawFloat(temperature_get(kMidLo), 1,62, 124);
+        img.drawFloat(temperature_get(kBottom), 1,62, 179);
+        img.drawFloat(temperature_get(kPump), 1,182, 190);
       break;
 
       case kTopDisplay:
