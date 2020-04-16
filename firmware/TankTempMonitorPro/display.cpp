@@ -17,6 +17,7 @@ QRCode qrcode;
 static uint8_t displayMode = 0;
 static bool qrMode = false;
 
+
 typedef struct 
 {
   typedef
@@ -40,13 +41,29 @@ static int temp2colour(float temp);
 
 uint16_t ID;
 systemInfo_t mySystem;
+static unsigned int brightness;
 
 void display_init(void)
 {
   tft.init();
   tft.fillScreen(TFT_BLACK);
 
+  // configure pwm for backlight contorl
+  ledcSetup(BACKLIGHT_PWM_CHANNEL, BACKLIGHT_PWM_FREQ, BACKLIGHT_PWM_RES);
+  // attach the channel to the GPIO to be controlled
+  ledcAttachPin(BACKLIGHT_PWM_PIN, BACKLIGHT_PWM_CHANNEL);  
+  ledcWrite(BACKLIGHT_PWM_CHANNEL, 255);
+
   img.createSprite(FRAME_HEIGHT, FRAME_WIDTH); // FIXME: this is the largest we can set the sprite size without the pushSprite function displaying a blank frame
+}
+
+
+void display_backlight_process()
+{
+    /* convert light level to backlight intensity */
+   int reading = analogRead(LDR_PIN);
+   brightness = map(reading, 0, 4096, 5, 255);
+   ledcWrite(BACKLIGHT_PWM_CHANNEL, brightness);
 }
 
 void display_cycle_next_mode()
@@ -145,6 +162,7 @@ void display_update()
         img.println("System Info");
         img.print("SSID: " );  img.println(info.ssid);
         img.print("IP: " );  img.println(info.ip);
+        img.print("Brightness: "); img.print((brightness*100)/255); img.println("%");
       break;
 
       case kMaxDisplay:

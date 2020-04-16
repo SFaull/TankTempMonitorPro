@@ -106,11 +106,7 @@ void Task2code( void * pvParameters ){
 
   wireless_OTA_callback_init();
 
-    // configure pwm for backlight contorl
-  ledcSetup(BACKLIGHT_PWM_CHANNEL, BACKLIGHT_PWM_FREQ, BACKLIGHT_PWM_RES);
-  // attach the channel to the GPIO to be controlled
-  ledcAttachPin(BACKLIGHT_PWM_PIN, BACKLIGHT_PWM_CHANNEL);  
-  ledcWrite(BACKLIGHT_PWM_CHANNEL, 255);
+
   
   display_init();
   display_splash();
@@ -124,10 +120,7 @@ void Task2code( void * pvParameters ){
 
   for(;;){
 
-  /* convert light level to backlight intensity */
-   int reading = analogRead(LDR_PIN);
-   int brightness = map(reading, 0, 4096, 5, 255);
-   ledcWrite(BACKLIGHT_PWM_CHANNEL, brightness);
+    display_backlight_process();
 
     // take sensor readings
     if(timer_expired(sensorReadTimer, SENSOR_READ_INTERVAL))

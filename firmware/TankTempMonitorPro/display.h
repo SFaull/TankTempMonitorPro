@@ -1,4 +1,5 @@
 void display_init(void);
+void display_backlight_process(void);
 void display_splash(void);
 void display_update(void) ;
 void display_clear(void);
