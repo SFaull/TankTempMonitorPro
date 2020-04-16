@@ -6,9 +6,16 @@
 #include <TFT_eSPI.h>
 #include "qrcode.h" // https://github.com/ricmoo/QRCode
 
+#define FRAME_HEIGHT  238
+#define FRAME_WIDTH   238
+#define DISPLAY_MODES 1
+
 TFT_eSPI tft = TFT_eSPI();   // Invoke library
 TFT_eSprite img = TFT_eSprite(&tft);  // framebuffer sprite
 QRCode qrcode;
+
+static uint8_t displayMode = 0;
+static bool qrMode = false;
 
 typedef struct 
 {
@@ -28,7 +35,26 @@ void display_init(void)
   tft.init();
   tft.fillScreen(TFT_BLACK);
 
-  img.createSprite(238, 238); // FIXME: this is the largest we can set the sprite size without the pushSprite function displaying a blank frame
+  img.createSprite(FRAME_HEIGHT, FRAME_WIDTH); // FIXME: this is the largest we can set the sprite size without the pushSprite function displaying a blank frame
+}
+
+void display_cycle_next_mode()
+{
+  displayMode++;
+  
+  if(displayMode >= DISPLAY_MODES) displayMode = 0;
+}
+
+void display_qr_mode_enable(bool enabled)
+{
+  qrMode = enabled;
+  if(qrMode)
+    display_QRcode("http://192.168.1.16:3000/d/yu-p1Akgk/water-tank?orgId=1&refresh=5s");
+}
+
+bool display_qr_mode_is_enabled()
+{
+  return qrMode;
 }
 
 void display_splash(void)
@@ -40,6 +66,12 @@ void display_splash(void)
 
 void display_update()
 {  
+  if(qrMode)
+  {
+    // do nothing
+    return;
+  }
+  
   img.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
   img.setTextColor(TFT_WHITE);
   img.setTextSize(3);
@@ -94,6 +126,63 @@ void display_QRcode_advanced(int offset_x, int offset_y, int element_size, int Q
   }
 }
 
+void display_upgrade_start()
+{    
+  img.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
+  img.setTextColor(TFT_WHITE);
+  img.setTextSize(3);
+  img.setTextFont(2);
+  img.drawString("Upgrading...", 5, 0);
+  img.drawRoundRect(5, tft.height()/2 - 10, tft.width() - 10, 10, 10, TFT_WHITE);
+  
+  /* draw the sprite to the display as an overlay */
+  img.pushSprite(1, 1);  // specify "BLACK" as the transparent colour
+}
+
+void display_upgrade_progress(unsigned int percent)
+{    
+  int progBarWidth = tft.width() - 10;
+  
+  img.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
+  img.setTextColor(TFT_WHITE);
+  img.setTextSize(3);
+  img.setTextFont(2);
+  img.drawString("Upgrading...", 5, 0);
+  img.drawRoundRect(5, tft.height()/2 - 10, progBarWidth, 20, 10, TFT_WHITE);
+  img.fillRoundRect(5, tft.height()/2 - 10, (progBarWidth*percent)/100, 20, 10, TFT_WHITE);
+
+  img.setCursor(5, 200);
+  img.print(percent);
+  img.println("%");
+  
+  /* draw the sprite to the display as an overlay */
+  img.pushSprite(1, 1);  // specify "BLACK" as the transparent colour
+}
+
+void display_upgrade_complete()
+{    
+  img.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
+  img.setTextColor(TFT_WHITE);
+  img.setTextSize(3);
+  img.setTextFont(2);
+  img.setCursor(0, 0);
+  img.println("Rebooting...");
+  
+  img.pushSprite(1, 1);  // specify "BLACK" as the transparent colour
+}
+
+void display_upgrade_error()
+{    
+  img.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
+  img.setTextColor(TFT_WHITE);
+  img.setTextSize(3);
+  img.setTextFont(2);
+  img.setCursor(0, 0);
+  img.println("Upgrade");
+  img.println("Error");
+  
+  img.pushSprite(1, 1);  // specify "BLACK" as the transparent colour
+}
 
 void display_clear(void)
 {

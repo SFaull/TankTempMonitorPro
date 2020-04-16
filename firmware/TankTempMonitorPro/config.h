@@ -3,12 +3,15 @@
 
 /* General */
 #define DEVICE_NAME               "TankTempMonitorPro"
+#define HOSTNAME                  "krusty"
 #define SERIAL_BAUD_RATE          115200
 #define MQTT_PUBLISH_INTERVAL     10000 // 10 seconds
+#define BUTTON_HOLD_DURATION      1500  // 1.5 seconds
 /* Pinout */
 #define ONE_WIRE_BUS              16  // onewire sensors are connected to pin A5
 #define LDR_PIN                   33
 #define BACKLIGHT_PWM_PIN         19
+#define BUTTON_PIN                14
 /* Display PWM options */
 #define BACKLIGHT_PWM_CHANNEL     0
 #define BACKLIGHT_PWM_FREQ        5000

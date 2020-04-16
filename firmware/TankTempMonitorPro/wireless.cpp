@@ -2,6 +2,7 @@
 #include "config.h"
 #include "structs.h"
 #include "temperature.h"
+#include "display.h"
 
 #ifdef ENABLE_WIRELESS
 
@@ -35,9 +36,9 @@
   static void OTA_process(void);
   
   void wireless_init(void)
-  {
-    //OTA_init();
+  {    
     wifi_init();
+    OTA_init();
     mqtt_init();
   }
   
@@ -45,11 +46,12 @@
   {  
     //wifi_process();
     mqtt_process();
-    //OTA_process();
+    OTA_process();
   }
   
   static void wifi_init(void)
   {
+	  WiFi.setHostname(HOSTNAME);
     WiFi.mode(WIFI_STA); // Force to station mode because if device was switched off while in access point mode it will start up next time
     WiFiManager wifiManager;
     wifiManager.setTimeout(WIFI_TIMEOUT);
@@ -180,24 +182,47 @@
   
   static void OTA_init(void)
   {
+    ArduinoOTA.setHostname(HOSTNAME);
     ArduinoOTA.onStart([]() {
-      Serial.println("OTA Update Started");
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH) {
+        type = "sketch";
+      } else { // U_SPIFFS
+        type = "filesystem";
+      }
+  
+      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      Serial.println("Start updating " + type);
+      display_upgrade_start();
     });
     ArduinoOTA.onEnd([]() {
-      Serial.println("\nOTA Update Complete");
+      Serial.println("\nEnd");
+      display_upgrade_complete();
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+      uint8_t percent = progress / (total / 100);
+      Serial.printf("Progress: %u%%\r", percent);
+      display_upgrade_progress(percent);
     });
     ArduinoOTA.onError([](ota_error_t error) {
       Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+      display_upgrade_error();
+      if (error == OTA_AUTH_ERROR) {
+        Serial.println("Auth Failed");
+      } else if (error == OTA_BEGIN_ERROR) {
+        Serial.println("Begin Failed");
+      } else if (error == OTA_CONNECT_ERROR) {
+        Serial.println("Connect Failed");
+      } else if (error == OTA_RECEIVE_ERROR) {
+        Serial.println("Receive Failed");
+      } else if (error == OTA_END_ERROR) {
+        Serial.println("End Failed");
+      }
     });
     ArduinoOTA.begin();
+    Serial.println("Ready");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
   }
   
   static void OTA_process(void)
