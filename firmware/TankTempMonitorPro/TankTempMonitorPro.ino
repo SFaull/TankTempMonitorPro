@@ -126,7 +126,7 @@ void Task2code( void * pvParameters ){
 
   /* convert light level to backlight intensity */
    int reading = analogRead(LDR_PIN);
-   int brightness = map(reading, 0, 4096, 15, 255);
+   int brightness = map(reading, 0, 4096, 5, 255);
    ledcWrite(BACKLIGHT_PWM_CHANNEL, brightness);
 
     // take sensor readings

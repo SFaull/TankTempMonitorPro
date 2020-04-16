@@ -6,7 +6,7 @@
 #define HOSTNAME                  "krusty"
 #define SERIAL_BAUD_RATE          115200
 #define MQTT_PUBLISH_INTERVAL     10000 // 10 seconds
-#define BUTTON_HOLD_DURATION      1500  // 1.5 seconds
+#define BUTTON_HOLD_DURATION      800  // 0.8 seconds
 /* Pinout */
 #define ONE_WIRE_BUS              16  // onewire sensors are connected to pin A5
 #define LDR_PIN                   33
