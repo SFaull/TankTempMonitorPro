@@ -90,6 +90,10 @@ void Task1code( void * pvParameters ){
       timer_set(&mqttPublishTimer);    
     }
 
+    // if an OTA update starts, don't try and do anything else, just kick the watchdog
+    unsigned int nan;
+    while( wirelss_upgrade_in_progress(&nan))   {  kickTheDog(); }
+
     wireless_process();
     kickTheDog();
   } 
@@ -99,6 +103,8 @@ void Task1code( void * pvParameters ){
 void Task2code( void * pvParameters ){
   Serial.print("Task2 running on core ");
   Serial.println(xPortGetCoreID());
+
+  wireless_OTA_callback_init();
 
     // configure pwm for backlight contorl
   ledcSetup(BACKLIGHT_PWM_CHANNEL, BACKLIGHT_PWM_FREQ, BACKLIGHT_PWM_RES);
@@ -165,7 +171,6 @@ void Task2code( void * pvParameters ){
           else
           {
             // short press action
-            // cycle the display modes
             display_cycle_next_mode();
           }
         }
@@ -173,7 +178,22 @@ void Task2code( void * pvParameters ){
       displayRefreshTimer = 99999; // force a refresh by setting the timer to something large
     }
     
-    
+    // if an OTA update starts, don't try and do anything else, just kick the watchdog
+    unsigned int nan;
+    while( wirelss_upgrade_in_progress(&nan))   { kickTheDog(); }
+
+#if 0
+    unsigned int upgradeProgress = 0;
+    while( wirelss_upgrade_in_progress(&upgradeProgress))
+    {
+      static unsigned int last = 999;
+      if(last != upgradeProgress)
+        display_upgrade_progress(upgradeProgress);
+      if(upgradeProgress == 100)
+        display_upgrade_complete();
+    }
+#endif
+
     commands_process();
     kickTheDog();
   }

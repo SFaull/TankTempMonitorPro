@@ -189,10 +189,19 @@
       }
     }  
   }
+
+  bool upgradeInProgress = false;
+  unsigned int upgradeProgress = 0;
   
-  static void OTA_init(void)
+
+  bool wirelss_upgrade_in_progress(unsigned int* percent)
   {
-    ArduinoOTA.setHostname(HOSTNAME);
+    *percent = upgradeProgress;
+    return upgradeInProgress; 
+  }
+
+  void wireless_OTA_callback_init()
+  {
     ArduinoOTA.onStart([]() {
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH) {
@@ -204,18 +213,21 @@
       // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
       Serial.println("Start updating " + type);
       display_upgrade_start();
+      upgradeInProgress = true;
     });
     ArduinoOTA.onEnd([]() {
       Serial.println("\nEnd");
       display_upgrade_complete();
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      uint8_t percent = progress / (total / 100);
-      Serial.printf("Progress: %u%%\r", percent);
-      display_upgrade_progress(percent);
+      upgradeProgress = progress / (total / 100);
+      Serial.printf("Progress: %u%%\r", upgradeProgress);
+      display_upgrade_progress(upgradeProgress);
     });
     ArduinoOTA.onError([](ota_error_t error) {
       Serial.printf("Error[%u]: ", error);
+      upgradeProgress = 0;
+      upgradeInProgress = false;
       display_upgrade_error();
       if (error == OTA_AUTH_ERROR) {
         Serial.println("Auth Failed");
@@ -229,6 +241,13 @@
         Serial.println("End Failed");
       }
     });
+  }
+
+
+  static void OTA_init(void)
+  {
+    ArduinoOTA.setHostname(HOSTNAME);
+    
     ArduinoOTA.begin();
     Serial.println("Ready");
     Serial.print("IP address: ");
