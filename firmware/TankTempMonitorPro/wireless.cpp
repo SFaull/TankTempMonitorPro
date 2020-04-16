@@ -45,8 +45,12 @@
   void wireless_process(void)
   {  
     //wifi_process();
-    mqtt_process();
     OTA_process();
+  }
+
+  void wireless_mqtt_publish()
+  {
+    mqtt_process();
   }
 
   void wireless_info(wifiInfo_t * info)

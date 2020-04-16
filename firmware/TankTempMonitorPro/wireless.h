@@ -9,3 +9,4 @@ typedef struct
 void wireless_init(void);
 void wireless_process(void);
 void wireless_info(wifiInfo_t * info);
+void wireless_mqtt_publish(void);
