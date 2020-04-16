@@ -5,10 +5,10 @@
 #include "temperature.h"
 #include <TFT_eSPI.h>
 #include "qrcode.h" // https://github.com/ricmoo/QRCode
+#include "wireless.h"
 
 #define FRAME_HEIGHT  238
 #define FRAME_WIDTH   238
-#define DISPLAY_MODES 1
 
 TFT_eSPI tft = TFT_eSPI();   // Invoke library
 TFT_eSprite img = TFT_eSprite(&tft);  // framebuffer sprite
@@ -23,6 +23,17 @@ typedef struct
   int tank[SENSOR_COUNT-1];
   int pump;
 } systemInfo_t;
+
+typedef enum {
+  kTankDisplay = 0,
+  kTopDisplay,
+  kMidDisplay,
+  kBottomDisplay,
+  kPumpDisplay,
+  kSystemInfoDisplay,
+  kMaxDisplay
+} displayMode_t;
+
 
 static void display_QRcode_advanced(int offset_x, int offset_y, int element_size, int QRsize, int ECC_Mode, const char* Message);
 static int temp2colour(float temp);
@@ -42,7 +53,8 @@ void display_cycle_next_mode()
 {
   displayMode++;
   
-  if(displayMode >= DISPLAY_MODES) displayMode = 0;
+  // If at the last display state, loop back to the first
+  if(displayMode >= kMaxDisplay) displayMode = (displayMode_t)0;
 }
 
 void display_qr_mode_enable(bool enabled)
@@ -66,33 +78,80 @@ void display_splash(void)
 
 void display_update()
 {  
+  wifiInfo_t info;
+  
   if(qrMode)
   {
     // do nothing
     return;
   }
-  
+
   img.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
   img.setTextColor(TFT_WHITE);
   img.setTextSize(3);
   img.setTextFont(2);
+  img.setCursor(0, 0);
+  img.setTextDatum(TC_DATUM); // Set datum to top centre
 
-    /* draw the tank graphic onto the display */
-  img.fillRect(135, 190, 105, 50, TFT_BLACK);  // this is necessary to remove the pump reading from the previous frame
-  img.drawBitmap(3,4,tank_top, 115, 58, temp2colour(temperature_get(kTop)));
-  img.fillRect(3,65,115, 53, temp2colour(temperature_get(kMidHi)));
-  img.fillRect(3,121,115, 56, temp2colour(temperature_get(kMidLo)));
-  img.drawBitmap(3,180,tank_bottom, 115, 56, temp2colour(temperature_get(kBottom)));
-  img.drawBitmap(0,0,tank_outline, 121, 240, TFT_WHITE);
-  img.drawBitmap(142,120,pump_inside, 73, 64, temp2colour(temperature_get(kPump)));
-  img.drawBitmap(142,120,pump_outline, 73, 64, TFT_WHITE);
-  
-  /* draw the sensor data onto the sprite */
-  img.drawFloat(temperature_get(kTop), 1, 19, 15);
-  img.drawFloat(temperature_get(kMidHi), 1,19, 66);
-  img.drawFloat(temperature_get(kMidLo), 1,19, 124);
-  img.drawFloat(temperature_get(kBottom), 1,19, 179);
-  img.drawFloat(temperature_get(kPump), 1,135, 190);
+  switch(displayMode)
+  {
+      case kTankDisplay:
+          /* draw the tank graphic onto the display */
+        img.fillRect(135, 190, 105, 50, TFT_BLACK);  // this is necessary to remove the pump reading from the previous frame
+        img.drawBitmap(3,4,tank_top, 115, 58, temp2colour(temperature_get(kTop)));
+        img.fillRect(3,65,115, 53, temp2colour(temperature_get(kMidHi)));
+        img.fillRect(3,121,115, 56, temp2colour(temperature_get(kMidLo)));
+        img.drawBitmap(3,180,tank_bottom, 115, 56, temp2colour(temperature_get(kBottom)));
+        img.drawBitmap(0,0,tank_outline, 121, 240, TFT_WHITE);
+        img.drawBitmap(142,120,pump_inside, 73, 64, temp2colour(temperature_get(kPump)));
+        img.drawBitmap(142,120,pump_outline, 73, 64, TFT_WHITE);
+        
+        /* draw the sensor data onto the sprite */
+        img.drawFloat(temperature_get(kTop), 1, 19, 15);
+        img.drawFloat(temperature_get(kMidHi), 1,19, 66);
+        img.drawFloat(temperature_get(kMidLo), 1,19, 124);
+        img.drawFloat(temperature_get(kBottom), 1,19, 179);
+        img.drawFloat(temperature_get(kPump), 1,135, 190);
+      break;
+
+      case kTopDisplay:
+        img.fillSprite(temp2colour(temperature_get(kTop)));
+        img.drawString("Top", tft.width()/2, 0);
+        img.drawFloat(temperature_get(kTop), 1, tft.width()/2, tft.height()/2, 4);
+      break;
+
+      case kMidDisplay:
+        img.fillSprite(temp2colour(temperature_get(kMidHi)));
+        img.drawString("Mid", tft.width()/2, 0);
+        img.drawFloat(temperature_get(kMidHi), 1, tft.width()/2, tft.height()/2, 4);
+      break;
+
+      case kBottomDisplay:
+        img.fillSprite(temp2colour(temperature_get(kBottom)));
+        img.drawString("Bottom", tft.width()/2, 0);
+        img.drawFloat(temperature_get(kBottom), 1, tft.width()/2, tft.height()/2, 4);
+      break;
+
+      case kPumpDisplay:
+        img.fillSprite(temp2colour(temperature_get(kPump)));
+        img.drawString("Pump", tft.width()/2, 0);
+        img.drawFloat(temperature_get(kPump), 1, tft.width()/2, tft.height()/2, 4);
+      break;
+
+      case kSystemInfoDisplay:
+        wireless_info(&info);
+        img.setTextDatum(TL_DATUM); // Set datum to top left
+        img.setTextSize(2);
+        img.println("System Info");
+        img.print("SSID: " );  img.println(info.ssid);
+        img.print("IP: " );  img.println(info.ip);
+      break;
+
+      case kMaxDisplay:
+        // should never get here
+        displayMode = kTankDisplay;
+      break;
+  }
 
   /* draw the sprite to the display as an overlay */
   img.pushSprite(1, 1);  // specify "BLACK" as the transparent colour

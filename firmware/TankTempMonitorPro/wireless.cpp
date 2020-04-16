@@ -48,6 +48,12 @@
     mqtt_process();
     OTA_process();
   }
+
+  void wireless_info(wifiInfo_t * info)
+  {
+    info->ssid = String(WiFi.SSID().c_str());
+    info->ip = WiFi.localIP().toString();
+  }
   
   static void wifi_init(void)
   {
