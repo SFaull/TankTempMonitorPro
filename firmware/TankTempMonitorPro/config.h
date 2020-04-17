@@ -19,7 +19,8 @@
 /* Sensors */
 #define SENSOR_READ_INTERVAL      1000  // read sensors every second
 /* Display */
-#define DISPLAY_UPDATE_INTERVAL   1000 // update display every second
+#define DISPLAY_REFRESH_RATE      5  // fps
+#define DISPLAY_UPDATE_INTERVAL   (1000 / DISPLAY_REFRESH_RATE)
 /* Temperature preferences */
 #define TEMP_HOT  25
 #define TEMP_COLD 25
