@@ -14,6 +14,7 @@ TFT_eSPI tft = TFT_eSPI();   // Invoke library
 TFT_eSprite img = TFT_eSprite(&tft);  // framebuffer sprite
 QRCode qrcode;
 
+wifiInfo_t info;
 static uint8_t displayMode = 0;
 static bool qrMode = false;
 
@@ -78,7 +79,27 @@ void display_qr_mode_enable(bool enabled)
 {
   qrMode = enabled;
   if(qrMode)
-    display_QRcode("http://192.168.1.16:3000/d/yu-p1Akgk/water-tank?orgId=1&refresh=5s");
+  {
+    wireless_info(&info); // update wifi info
+    if(info.connected)
+      display_QRcode("http://192.168.1.16:3000/d/yu-p1Akgk/water-tank?orgId=1&refresh=5s");
+    else
+    {
+#if 0
+      // this code will take us to the web portal
+      String address = "http://" + info.ip;
+      char charBuf[20];
+      address.toCharArray(charBuf, address.length()+1);
+      display_QRcode((char*)charBuf);
+#else
+      String wificonnectstring = "WIFI:T:;S:" + info.ssid + ";P:;;";
+      char charBuf[60];
+      wificonnectstring.toCharArray(charBuf, wificonnectstring.length()+1);
+      // this code will let us join the access point and once connected, a notification will 
+      display_QRcode((char*)charBuf);
+#endif
+    }
+  }
 }
 
 bool display_qr_mode_is_enabled()
@@ -95,11 +116,14 @@ void display_splash(void)
 
 void display_update()
 {  
-  wifiInfo_t info;
-  
   if(qrMode)
   {
-    // do nothing
+    static bool lastState = false;
+    wireless_info(&info); // update wifi info
+    if(info.connected != lastState)
+      display_qr_mode_enable(false);  // go back to the normal display mode
+
+    lastState = info.connected;
     return;
   }
 
@@ -160,8 +184,10 @@ void display_update()
         img.setTextDatum(TL_DATUM); // Set datum to top left
         img.setTextSize(2);
         img.println("System Info");
+        img.print("Wifi: "); img.println(info.connected ? "Connected" : "Disconnected");
         img.print("SSID: " );  img.println(info.ssid);
         img.print("IP: " );  img.println(info.ip);
+        img.print("Signal: "); img.println(wireless_get_connection_strength());
         img.print("Brightness: "); img.print((brightness*100)/255); img.println("%");
       break;
 
@@ -177,6 +203,8 @@ void display_update()
 
 void display_QRcode(const char* Message)
 {
+  Serial.print("Generating QR code for: ");
+  Serial.println(Message);
   tft.fillScreen(TFT_BLACK);
   tft.fillRect(12,12,215,215, TFT_WHITE);
   display_QRcode_advanced(17,17,5,6,2,Message);

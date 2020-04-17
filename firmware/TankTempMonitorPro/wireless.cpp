@@ -55,8 +55,20 @@
 
   void wireless_info(wifiInfo_t * info)
   {
-    info->ssid = String(WiFi.SSID().c_str());
-    info->ip = WiFi.localIP().toString();
+    WiFiManager wifiManager;
+    
+    info->connected = (WiFi.status() == WL_CONNECTED);
+    // if we are connected to a netowk, populate with that info, otherwise populate with the portal info
+    if(info->connected)
+    {
+      info->ssid = String(WiFi.SSID().c_str());
+      info->ip = WiFi.localIP().toString();
+    }
+    else
+    {
+      info->ssid = HOSTNAME;  // TODO: find better way to get the ap ssid
+      info->ip = WiFi.softAPIP().toString();
+    }
   }
   
   static void wifi_init(void)
@@ -65,7 +77,7 @@
     WiFi.mode(WIFI_STA); // Force to station mode because if device was switched off while in access point mode it will start up next time
     WiFiManager wifiManager;
     wifiManager.setTimeout(WIFI_TIMEOUT);
-    bool connectionSuccess = wifiManager.autoConnect(DEVICE_NAME);  
+    bool connectionSuccess = wifiManager.autoConnect(HOSTNAME);  
     if (!connectionSuccess) 
     {
       Serial.println("Connection failed");
@@ -96,6 +108,22 @@
           //delay(5000);
       }
     }
+  }
+
+  String wireless_get_connection_strength()
+  {
+    int32_t rssi = WiFi.RSSI();
+    Serial.print("Signal strength");
+    Serial.print(rssi);
+    Serial.print("dBm");
+    if(rssi < -70)
+      return "Weak";
+    if(rssi < -60)
+      return "Fair";
+    if(rssi < -50)
+      return "Good";
+
+    return "Excellent";
   }
   
   static void mqtt_init(void)
