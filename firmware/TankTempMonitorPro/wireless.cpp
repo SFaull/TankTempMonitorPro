@@ -243,6 +243,13 @@
     });
   }
 
+  void wireless_forget_network(void)
+  {
+    esp_wifi_restore();
+    delay(1000);
+    ESP.restart();
+  }
+
 
   static void OTA_init(void)
   {
