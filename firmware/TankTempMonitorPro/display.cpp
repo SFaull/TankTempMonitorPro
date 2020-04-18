@@ -303,7 +303,7 @@ static int temp2colour(float temp)
   if(temp < TEMP_COLD)
     return TFT_BLUE;
   else if (temp < TEMP_HOT)
-    return TFT_GREEN;
+    return 0xAAE0;//0xEBA0;  // custom orange
   else
     return TFT_RED;  
 }
