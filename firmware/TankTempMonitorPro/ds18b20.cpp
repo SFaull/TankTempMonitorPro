@@ -78,13 +78,29 @@ void ds18b20_request(void)
 }
 
 void ds18b20_getTemp(void)
-{  
+{ 
+  unsigned int retries = 10;
+  bool sensorsReady = false;
+
+  // a little blocking loop to wait for conversion to be complete
+  do
+  {
+    sensorsReady = sensors.isConversionComplete();
+    retries--;
+    if(!sensorsReady)
+    {
+      delay(1);
+      Serial.println("Waiting for conversion to complete");
+    }
+  } while (!sensorsReady && retries > 0);
+  
   for (int i=0; i<deviceCount; i++)
   {  
     //mySensor[i].temperature = sensors.getTempCByIndex(i);
 
     // store the raw temperature reading
-    mySensor[i].temperature = sensors.getTempC(mySensor[i].address) - mySensor[i].offset;
+    float raw = sensors.getTempC(mySensor[i].address);
+    mySensor[i].temperature = raw - mySensor[i].offset;
 
     if(mySensor[i].sampleCount <= 0)
       mySensor[i].temperatureAve = mySensor[i].temperature;
