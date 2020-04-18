@@ -22,8 +22,8 @@
 #define DISPLAY_REFRESH_RATE      5  // fps
 #define DISPLAY_UPDATE_INTERVAL   (1000 / DISPLAY_REFRESH_RATE)
 /* Temperature preferences */
-#define TEMP_HOT  25
-#define TEMP_COLD 25
+#define TEMP_HOT                  40
+#define TEMP_COLD                 30
 #define SENSOR_COUNT 5
 
 /* Wireless */
