@@ -31,7 +31,8 @@ typedef struct
 typedef enum {
   kTankDisplay = 0,
   kTopDisplay,
-  kMidDisplay,
+  kMidHiDisplay,
+  kMidLoDisplay,
   kBottomDisplay,
   kPumpDisplay,
   kSystemInfoDisplay,
@@ -170,10 +171,16 @@ void display_update()
         img.drawFloat(temperature_get(kTop), 1, tft.width()/2, tft.height()/2, 4);
       break;
 
-      case kMidDisplay:
+      case kMidHiDisplay:
         img.fillSprite(temp2colour(temperature_get(kMidHi)));
-        img.drawString("Mid", tft.width()/2, 0);
+        img.drawString("Uppper Mid", tft.width()/2, 0);
         img.drawFloat(temperature_get(kMidHi), 1, tft.width()/2, tft.height()/2, 4);
+      break;
+
+      case kMidLoDisplay:
+        img.fillSprite(temp2colour(temperature_get(kMidLo)));
+        img.drawString("Lower Mid", tft.width()/2, 0);
+        img.drawFloat(temperature_get(kMidLo), 1, tft.width()/2, tft.height()/2, 4);
       break;
 
       case kBottomDisplay:
