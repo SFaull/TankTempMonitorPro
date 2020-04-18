@@ -6,6 +6,7 @@
 #include <TFT_eSPI.h>
 #include "qrcode.h" // https://github.com/ricmoo/QRCode
 #include "wireless.h"
+#include "ds18b20.h"
 
 #define FRAME_HEIGHT  238
 #define FRAME_WIDTH   238
@@ -184,6 +185,7 @@ void display_update()
         img.setTextDatum(TL_DATUM); // Set datum to top left
         img.setTextSize(2);
         img.println("System Info");
+        img.print("Sensors: "); img.println(ds18b20_get_device_count());
         img.print("Wifi: "); img.println(info.connected ? "Connected" : "Disconnected");
         img.print("SSID: " );  img.println(info.ssid);
         img.print("IP: " );  img.println(info.ip);

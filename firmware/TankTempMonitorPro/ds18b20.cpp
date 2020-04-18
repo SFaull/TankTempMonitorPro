@@ -69,6 +69,10 @@ void ds18b20_init(void)
   sensors.setWaitForConversion(false);
 }
 
+int ds18b20_get_device_count()
+{
+  return deviceCount;
+}
 void ds18b20_request(void)
 {    
   sensors.requestTemperatures(); 

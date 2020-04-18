@@ -19,3 +19,4 @@ extern sensor_t mySensor[SENSOR_COUNT];
 void ds18b20_init(void);
 void ds18b20_request(void);
 void ds18b20_getTemp(void);
+int ds18b20_get_device_count(void);
