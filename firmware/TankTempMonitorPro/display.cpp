@@ -119,8 +119,15 @@ void display_update()
 {  
   if(qrMode)
   {
+    static bool firstRun = true;
     static bool lastState = false;
     wireless_info(&info); // update wifi info
+    if(firstRun)
+    {
+      firstRun = false;
+      lastState = info.connected;
+    }
+    
     if(info.connected != lastState)
       display_qr_mode_enable(false);  // go back to the normal display mode
 
