@@ -113,9 +113,11 @@
   String wireless_get_connection_strength()
   {
     int32_t rssi = WiFi.RSSI();
+#if 0
     Serial.print("Signal strength");
     Serial.print(rssi);
-    Serial.print("dBm");
+    Serial.println("dBm");
+#endif
     if(rssi < -70)
       return "Weak";
     if(rssi < -60)
@@ -208,12 +210,7 @@
       }
       if(strcmp(input,"*RST")==0)
       {
-        // give info
-        client.disconnect();
-        WiFiManager wifiManager;
-        wifiManager.resetSettings();
-        wifiManager.autoConnect(DEVICE_NAME);
-        //ESP.restart();
+        wireless_forget_network();
       }
     }  
   }
