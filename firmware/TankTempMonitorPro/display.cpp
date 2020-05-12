@@ -114,7 +114,7 @@ void display_splash(void)
 {
   tft.setTextSize(3);
   tft.setTextFont(2);
-  tft.drawString("BOOTING....", 0, 0);
+  tft.drawString("Booting....", 0, 0);
 }
 
 void display_update()
@@ -163,6 +163,18 @@ void display_update()
         img.drawFloat(temperature_get(kMidLo), 1,62, 124);
         img.drawFloat(temperature_get(kBottom), 1,62, 179);
         img.drawFloat(temperature_get(kPump), 1,182, 190);
+
+        if(ds18b20_get_error())
+        {
+          int pad = 30;
+          img.fillRect(pad,pad,tft.width()-(pad*2), tft.height()-(pad*2), TFT_RED);
+          img.setTextSize(4);
+          img.setTextDatum(MC_DATUM); // Set datum to middle
+          img.setTextColor(TFT_BLACK);
+          img.drawString("Sensor", tft.width()/2, (tft.height()/2-30));
+          img.drawString("Error", tft.width()/2, (tft.height()/2)+30);
+        }
+        
       break;
 
       case kTopDisplay:

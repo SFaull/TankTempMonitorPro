@@ -8,8 +8,8 @@
 typedef struct 
 {
   DeviceAddress address;
-  float temperature = -1.0;
-  float temperatureAve = -1.0;
+  float temperature = -99.0;
+  float temperatureAve = -99.0;
   float offset = 0.0;
   uint16_t sampleCount = 0;
 } sensor_t;
@@ -20,3 +20,4 @@ void ds18b20_init(void);
 void ds18b20_request(void);
 void ds18b20_getTemp(void);
 int ds18b20_get_device_count(void);
+bool ds18b20_get_error(void);

@@ -1,9 +1,10 @@
 //#define DEBUG
 #define ENABLE_WIRELESS
+#define MQTT_JSON
 
 /* General */
-#define DEVICE_NAME               "TankTempMonitorPro"
 #define HOSTNAME                  "krusty"
+#define DEVICE_NAME               HOSTNAME
 #define SERIAL_BAUD_RATE          115200
 #define MQTT_PUBLISH_INTERVAL     10000 // 10 seconds
 #define BUTTON_HOLD_DURATION      800  // 0.8 seconds
@@ -31,13 +32,12 @@
   /* Wifi */
   #define WIFI_TIMEOUT            300           // device will reset if no connection via portal within this number of seconds
   /* MQTT */
-  #define MQTT_ROOM               "AiringCupboard"
-  #define MQTT_COMMS              MQTT_ROOM "/" DEVICE_NAME
   #define MQTT_SERVER             "your.server.here"
   #define MQTT_USERNAME           "username"
   #define MQTT_PASSWORD           "password"
   #define MQTT_PORT               16601
-  #define MQTT_TOPIC(x)         MQTT_ROOM "/" x
+  #define MQTT_ROOM               "airing_cupboard"
+  #define MQTT_TOPIC(x)           MQTT_ROOM "/" HOSTNAME "/" x
 #endif
 
 

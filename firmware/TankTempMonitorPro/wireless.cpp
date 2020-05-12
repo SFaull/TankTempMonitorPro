@@ -1,8 +1,13 @@
+
+
 #include "wireless.h"
 #include "config.h"
 #include "structs.h"
 #include "temperature.h"
 #include "display.h"
+#include "version.h"
+
+#define MQTT_MAX_PACKET_SIZE 512
 
 #ifdef ENABLE_WIRELESS
 
@@ -21,7 +26,14 @@
   #include <PubSubClient.h>
   #include <ArduinoOTA.h>
   #include <WifiUDP.h>
-  
+
+#ifdef MQTT_JSON
+  #include <ArduinoJson.h>
+#endif
+
+// import the headers
+#include <ESPmDNS.h>
+
   // General variable declarations
   WiFiClient espClient;
   PubSubClient client(espClient);
@@ -34,6 +46,7 @@
   static void mqtt_callback(char* topic, byte* payload, unsigned int length);
   static void OTA_init(void);
   static void OTA_process(void);
+  static IPAddress findMDNS(String mDnsHost);
   
   void wireless_init(void)
   {    
@@ -130,7 +143,8 @@
   
   static void mqtt_init(void)
   {
-    client.setServer(MQTT_SERVER, MQTT_PORT);
+    IPAddress ip = findMDNS(MQTT_SERVER);
+    client.setServer(ip, MQTT_PORT);
     client.setCallback(mqtt_callback);
   }
   
@@ -149,11 +163,31 @@
         Serial.println("No MQTT connection");
         Serial.print("Attempting MQTT connection... ");
         // Attempt to connect
-        if (client.connect(DEVICE_NAME, MQTT_USERNAME, MQTT_PASSWORD))
+        if (client.connect(HOSTNAME, MQTT_USERNAME, MQTT_PASSWORD))
         {
           Serial.println("Connected");
-          client.publish(MQTT_ROOM, "Connected");
-          client.subscribe(MQTT_COMMS);
+          client.subscribe(MQTT_TOPIC("cmd"));
+
+          
+#ifdef MQTT_JSON
+          wifiInfo_t info;
+          wireless_info(&info);
+          StaticJsonDocument<1024> doc; // create a JSON document
+          doc["name"] = DEVICE_NAME;
+          doc["description"] = "Water Tank Temperature Monitor";
+          doc["version"] = VERSION_STRING;
+          doc["core"] = "ESP32";
+          doc["ssid"] = info.ssid;
+          doc["ip"] = info.ip;
+          doc["sensor_type"] = "DS18B20";
+          char buffer[512]; // create a character buffer for the JSON serialised stream
+          size_t n = serializeJson(doc, buffer);  // serialise the JSON doc
+          client.publish(MQTT_TOPIC("meta"), buffer, n);  // pulish the stream
+          serializeJsonPretty(doc, Serial);
+          Serial.println();
+#else
+          client.publish(MQTT_TOPIC("meta"), "Connected");
+#endif
         }
         else
         {
@@ -166,21 +200,53 @@
     /* Post MQTT Message */
     if(client.connected())
     {
+      /* fetch the temperature data */
+      bool validReadings = true;
       float temp[5];
       for(int i=0; i<5; i++)
+      {
         temp[i] = temperature_get((position_t)i);
-      String msg = String(temp[0]) + "," + String(temp[1]) + "," + String(temp[2]) + "," + String(temp[3]) + "," + String(temp[4]);
-      
-      client.publish(MQTT_TOPIC("RawData"), msg.c_str());
-      
-      client.publish(MQTT_TOPIC("Sensor1"), String(temp[0]).c_str());
-      client.publish(MQTT_TOPIC("Sensor2"), String(temp[1]).c_str());
-      client.publish(MQTT_TOPIC("Sensor3"), String(temp[2]).c_str());
-      client.publish(MQTT_TOPIC("Sensor4"), String(temp[3]).c_str());
-      client.publish(MQTT_TOPIC("Pump"),    String(temp[4]).c_str());
-      
-      Serial.print("Published: ");
-      Serial.println(msg);
+        
+        if(temp[i] < -54.0 || temp[i] > 126.0)
+        {
+          validReadings = false;
+        }
+        
+      }
+
+      /* if the data is good, publish it */
+      if(validReadings)
+      {
+#ifdef MQTT_JSON
+        StaticJsonDocument<1024> doc; // create a JSON document
+        // copy the temparure readings into the JSON object as strings
+        doc["temperature_tank_top"] = temp[0];
+        doc["temperature_tank_mid_hi"] = temp[1];
+        doc["temperature_tank_mid_lo"] = temp[2];
+        doc["temperature_tank_bottom"] = temp[3];
+        doc["temperature_pump"] = temp[4];
+        doc["wifi_rssi"] = WiFi.RSSI();
+        doc["light_level"] = analogRead(LDR_PIN);
+        char buffer[512]; // create a character buffer for the JSON serialised stream
+        size_t n = serializeJson(doc, buffer);  // serialise the JSON doc
+        client.publish(MQTT_TOPIC("data"), buffer, n);  // pulish the stream
+        serializeJsonPretty(doc, Serial);
+        Serial.println();
+#else
+        String msg = String(temp[0]) + "," + String(temp[1]) + "," + String(temp[2]) + "," + String(temp[3]) + "," + String(temp[4]);
+        
+        client.publish(MQTT_TOPIC("RawData"), msg.c_str());
+        
+        client.publish(MQTT_TOPIC("Sensor1"), String(temp[0]).c_str());
+        client.publish(MQTT_TOPIC("Sensor2"), String(temp[1]).c_str());
+        client.publish(MQTT_TOPIC("Sensor3"), String(temp[2]).c_str());
+        client.publish(MQTT_TOPIC("Sensor4"), String(temp[3]).c_str());
+        client.publish(MQTT_TOPIC("Pump"),    String(temp[4]).c_str());
+        
+        Serial.print("Published: ");
+        Serial.println(msg);
+#endif
+      }
     }
   
     client.loop();
@@ -201,7 +267,7 @@
     Serial.print("MQTT message received: ");
     Serial.println(input);
   
-    if (strcmp(topic, MQTT_COMMS)==0)
+    if (strcmp(topic, MQTT_TOPIC("cmd"))==0)
     {    
       if(strcmp(input,"*IDN?")==0)
       {
@@ -290,4 +356,34 @@
   {
     ArduinoOTA.handle();
   }
+
+
+// on my laptop (Ubuntu) the equivalent command is: `avahi-resolve-host-name -4 mqtt-broker.local`
+IPAddress findMDNS(String mDnsHost) { 
+  // the input mDnsHost is e.g. "mqtt-broker" from "mqtt-broker.local"
+  Serial.println("Finding the mDNS details...");
+  // Need to make sure that we're connected to the wifi first
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(250);
+    Serial.print(".");
+  }
+  if (!MDNS.begin(HOSTNAME)) {
+    Serial.println("Error setting up MDNS responder!");
+  } else {
+    Serial.println("Finished intitializing the MDNS client...");
+  }
+
+  Serial.println("mDNS responder started");
+  IPAddress serverIp = MDNS.queryHost(mDnsHost);
+  while (serverIp.toString() == "0.0.0.0") {
+    Serial.println("Trying again to resolve mDNS");
+    delay(250);
+    serverIp = MDNS.queryHost(mDnsHost);
+  }
+  Serial.print("IP address of server: ");
+  Serial.println(serverIp.toString());
+  Serial.println("Done finding the mDNS details...");
+  return serverIp;
+}
+
 #endif

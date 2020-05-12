@@ -69,6 +69,11 @@ void ds18b20_init(void)
   sensors.setWaitForConversion(false);
 }
 
+bool ds18b20_get_error()
+{
+  return (ds18b20_get_device_count() != SENSOR_COUNT);
+}
+
 int ds18b20_get_device_count()
 {
   return deviceCount;
@@ -104,6 +109,12 @@ void ds18b20_getTemp(void)
 
     // store the raw temperature reading
     float raw = sensors.getTempC(mySensor[i].address);
+    // operating temperature range of -55°C to +125°C
+    if(raw < -54.0 || raw > 126.0)
+    {
+      Serial.println("Bad Reading");
+      continue; // skip this iteration, its not the end of the world shit happens
+    }
     mySensor[i].temperature = raw - mySensor[i].offset;
 
     if(mySensor[i].sampleCount <= 0)
