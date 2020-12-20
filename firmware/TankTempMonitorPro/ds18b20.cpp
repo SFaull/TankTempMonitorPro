@@ -43,7 +43,9 @@ void ds18b20_init(void)
 
     if(position == kUnknown)
     {
-      Serial.println("Unknown Sensor, throwing it away");
+      Serial.print("Unknown Sensor, throwing it away: ");
+      printAddress(address);
+      Serial.println("");
       return;
     }
 
@@ -54,7 +56,7 @@ void ds18b20_init(void)
 
     mySensor[position].offset = calibrationOffset[i];
 
-    //#ifdef DEBUG
+    #ifdef DEBUG
       Serial.print("Sensor ");
       Serial.print(position);
       Serial.print(", Res: ");
@@ -63,7 +65,7 @@ void ds18b20_init(void)
       Serial.print(", Address: ");
       printAddress(mySensor[i].address);
       Serial.println("");
-    //#endif
+    #endif
   }
   
   sensors.setWaitForConversion(false);
