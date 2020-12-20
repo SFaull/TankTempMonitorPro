@@ -7,7 +7,7 @@
 #include "structs.h"
 #include "version.h"
 #include "Arduino.h"
-#include <Button.h>
+#include "JC_Button.h"
 #include "soc/timer_group_struct.h"
 #include "soc/timer_group_reg.h"
 
@@ -26,7 +26,8 @@ void kickTheDog(){
 TaskHandle_t Task1;
 TaskHandle_t Task2;
 
-Button button(BUTTON_PIN);
+Button button(BUTTON_PIN);       // define the button
+
 timer_t buttonHeldTimer;
 timer_t sensorReadTimer;
 timer_t mqttPublishTimer;
@@ -118,6 +119,7 @@ void Task2code( void * pvParameters ){
   for(;;){
 
     display_backlight_process();
+    button.read();
 
     // take sensor readings
     if(timer_expired(sensorReadTimer, SENSOR_READ_INTERVAL))
@@ -138,14 +140,14 @@ void Task2code( void * pvParameters ){
 
 
     // check for button press
-    if(button.pressed())
+    if(button.wasPressed())
     {
       timer_set(&buttonHeldTimer);
       // start timer
     }
 
     // check for button release
-    if (button.released())
+    if (button.wasReleased())
     {
         if(display_qr_mode_is_enabled())
         {
