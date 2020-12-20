@@ -12,6 +12,7 @@ typedef struct
   float temperatureAve = -99.0;
   float offset = 0.0;
   uint16_t sampleCount = 0;
+  bool valid = false;
 } sensor_t;
 
 extern sensor_t mySensor[SENSOR_COUNT];

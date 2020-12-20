@@ -108,6 +108,10 @@ void ds18b20_getTemp(void)
   
   for (int i=0; i<deviceCount; i++)
   {  
+    // if the sensor wasn't properly initialised, skip it
+    //if(!mySensor[i].valid)
+    //  continue;
+      
     //mySensor[i].temperature = sensors.getTempCByIndex(i);
 
     // store the raw temperature reading
