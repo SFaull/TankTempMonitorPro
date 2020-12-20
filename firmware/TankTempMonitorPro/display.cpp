@@ -114,7 +114,7 @@ void display_splash(void)
 {
   tft.setTextSize(3);
   tft.setTextFont(2);
-  tft.drawString("Booting....", 0, 0);
+  //tft.drawString("Booting....", 0, 0);
 }
 
 void display_update()
