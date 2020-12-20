@@ -57,7 +57,7 @@
   
   void wireless_process(void)
   {  
-    //wifi_process();
+    wifi_process();
     OTA_process();
   }
 
@@ -116,9 +116,9 @@
       // its been 1 minute, probably not gonna reconnect, lets reset.
       if(seconds > 60)
       {
-          //ESP.reset(); // This is a bit crude. For some unknown reason webserver can only be started once per boot up 
+          ESP.restart(); // This is a bit crude. For some unknown reason webserver can only be started once per boot up 
           // so resetting the device allows to go back into config mode again when it reboots.
-          //delay(5000);
+          delay(5000);
       }
     }
   }
