@@ -9,7 +9,7 @@
 #define MQTT_PUBLISH_INTERVAL     10000 // 10 seconds
 #define BUTTON_HOLD_DURATION      800  // 0.8 seconds
 /* Pinout */
-#define ONE_WIRE_BUS              16  // onewire sensors are connected to pin A5
+#define ONE_WIRE_BUS              17  // onewire sensors are connected to pin
 #define LDR_PIN                   33
 #define BACKLIGHT_PWM_PIN         19
 #define BUTTON_PIN                14
