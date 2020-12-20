@@ -41,12 +41,13 @@ void ds18b20_init(void)
     sensors.getAddress(address, i);
     position = getPosFromAddress(address);
 
+    // valid sensor, but not configured, lets ignore it
     if(position == kUnknown)
     {
       Serial.print("Unknown Sensor, throwing it away: ");
       printAddress(address);
       Serial.println("");
-      return;
+      continue;
     }
 
     /* store the address in the array of sensors at the position */
