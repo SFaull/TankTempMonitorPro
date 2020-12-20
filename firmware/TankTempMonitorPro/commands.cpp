@@ -9,6 +9,7 @@
 SerialCommand SCmd;   // The SerialCommand object
 
 static void identify();
+static void resetDevice();
 static void unrecognized();
 static void getTemperature();
 static void networkForget();
@@ -17,6 +18,7 @@ static void unrecognized();
 void commands_init(void)
 {  
   SCmd.addCommand("*IDN?", identify);
+  SCmd.addCommand("*RST", resetDevice);
   SCmd.addCommand("TEMP?", getTemperature);
   SCmd.addCommand("NETWORK:FORGET", networkForget);
   SCmd.addDefaultHandler(unrecognized);
@@ -32,6 +34,11 @@ static void identify()
   Serial.print(DEVICE_NAME);
   Serial.print(", ");
   Serial.println(VERSION_STRING);
+}
+
+static void resetDevice()
+{
+  ESP.restart();
 }
 
 static void networkForget()
