@@ -152,7 +152,6 @@ void display_update()
   {
       case kTankDisplay:
           /* draw the tank graphic onto the display */
-        Serial.println("Drawing tank");
         img.fillRect(135, 190, 105, 50, TFT_BLACK);  // this is necessary to remove the pump reading from the previous frame
         img.drawBitmap(3,4,tank_top, 115, 58, temp2colour(temperature_get(kTop)));
         img.fillRect(3,65,115, 53, temp2colour(temperature_get(kMidHi)));
@@ -163,7 +162,6 @@ void display_update()
         img.drawBitmap(142,120,pump_outline, 73, 64, TFT_WHITE);
         
         /* draw the sensor data onto the sprite */
-        Serial.println("Drawing temperatures");
         img.drawFloat(temperature_get(kTop), 1, 62, 15);
         img.drawFloat(temperature_get(kMidHi), 1,62, 66);
         img.drawFloat(temperature_get(kMidLo), 1,62, 124);
@@ -233,7 +231,6 @@ void display_update()
   }
 
   /* draw the sprite to the display as an overlay */
-  Serial.println("Pushing sprite");
   img.pushSprite(1, 1);  // specify "BLACK" as the transparent colour
   img.deleteSprite();
 }
