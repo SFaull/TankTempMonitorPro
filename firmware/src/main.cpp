@@ -121,7 +121,7 @@ void Task2code( void * pvParameters ){
 
   
   display_init();
-  display_splash();
+  //display_splash();
   
   temperature_init();
   commands_init();
@@ -156,6 +156,7 @@ void Task2code( void * pvParameters ){
     // check for button press
     if(button.wasPressed())
     {
+      Serial.println("Button pressed");
       timer_set(&buttonHeldTimer);
       // start timer
     }
@@ -163,6 +164,7 @@ void Task2code( void * pvParameters ){
     // check for button release
     if (button.wasReleased())
     {
+        Serial.println("Button released");
         if(display_qr_mode_is_enabled())
         {
           display_qr_mode_enable(false);
