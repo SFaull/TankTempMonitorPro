@@ -13,7 +13,7 @@ static void resetDevice();
 static void unrecognized();
 static void getTemperature();
 static void networkForget();
-static void unrecognized();
+static void unrecognized(const char*);
 
 void commands_init(void)
 {  
@@ -21,7 +21,7 @@ void commands_init(void)
   SCmd.addCommand("*RST", resetDevice);
   SCmd.addCommand("TEMP?", getTemperature);
   SCmd.addCommand("NETWORK:FORGET", networkForget);
-  SCmd.addDefaultHandler(unrecognized);
+  SCmd.setDefaultHandler(unrecognized);
 }
 
 void commands_process(void)
@@ -66,6 +66,6 @@ static void getTemperature()
 }
 
 // This gets set as the default handler, and gets called when no other command matches.
-static void unrecognized() {
+static void unrecognized(const char* cmd) {
   Serial.println("What?");
 }

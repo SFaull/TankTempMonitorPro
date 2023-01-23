@@ -35,7 +35,7 @@
   #define MQTT_SERVER             "your.server.here"
   #define MQTT_USERNAME           "username"
   #define MQTT_PASSWORD           "password"
-  #define MQTT_PORT               16601
+  #define MQTT_PORT               1883
   #define MQTT_ROOM               "airing_cupboard"
   #define MQTT_TOPIC(x)           MQTT_ROOM "/" HOSTNAME "/" x
 #endif
