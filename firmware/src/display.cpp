@@ -12,15 +12,6 @@
 #define FRAME_HEIGHT  238
 #define FRAME_WIDTH   238
 
-TFT_eSPI tft = TFT_eSPI();   // Invoke library
-TFT_eSprite img = TFT_eSprite(&tft);  // framebuffer sprite
-QRCode qrcode;
-
-wifiInfo_t info;
-static uint8_t displayMode = 0;
-static bool qrMode = false;
-
-
 typedef struct 
 {
   typedef
@@ -43,6 +34,14 @@ typedef enum {
 static void display_QRcode_advanced(int offset_x, int offset_y, int element_size, int QRsize, int ECC_Mode, const char* Message);
 static int temp2colour(float temp);
 
+TFT_eSPI tft = TFT_eSPI();   // Invoke library
+TFT_eSprite img = TFT_eSprite(&tft);  // framebuffer sprite
+QRCode qrcode;
+
+wifiInfo_t info;
+static uint8_t displayMode = 0;
+static bool qrMode = false;
+
 uint16_t ID;
 systemInfo_t mySystem;
 static unsigned int brightness;
@@ -57,8 +56,6 @@ void display_init(void)
   // attach the channel to the GPIO to be controlled
   ledcAttachPin(BACKLIGHT_PWM_PIN, BACKLIGHT_PWM_CHANNEL);  
   ledcWrite(BACKLIGHT_PWM_CHANNEL, 255);
-
-  img.createSprite(FRAME_HEIGHT, FRAME_WIDTH); // FIXME: this is the largest we can set the sprite size without the pushSprite function displaying a blank frame
 }
 
 
@@ -76,6 +73,11 @@ void display_cycle_next_mode()
   
   // If at the last display state, loop back to the first
   if(displayMode >= kMaxDisplay) displayMode = (displayMode_t)0;
+
+  Serial.print("Display mode: ");
+  Serial.println(displayMode);
+
+  //display_clear();
 }
 
 void display_qr_mode_enable(bool enabled)
@@ -85,7 +87,7 @@ void display_qr_mode_enable(bool enabled)
   {
     wireless_info(&info); // update wifi info
     if(info.connected)
-      display_QRcode("http://192.168.1.16:3000/d/yu-p1Akgk/water-tank?orgId=1&refresh=5s");
+      display_QRcode("http://192.168.0.22:3000/d/yu-p1Akgk/water-tank?orgId=1&refresh=5s");
     else
     {
 #if 0
@@ -114,7 +116,7 @@ void display_splash(void)
 {
   tft.setTextSize(3);
   tft.setTextFont(2);
-  //tft.drawString("Booting....", 0, 0);
+  tft.drawString("Booting....", 0, 0);
 }
 
 void display_update()
@@ -137,6 +139,8 @@ void display_update()
     return;
   }
 
+  img.setColorDepth(8);
+  img.createSprite(FRAME_HEIGHT, FRAME_WIDTH); // FIXME: this is the largest we can set the sprite size without the pushSprite function displaying a blank frame
   img.fillSprite(TFT_BLACK); // Note: Sprite is filled with black when created
   img.setTextColor(TFT_WHITE);
   img.setTextSize(3);
@@ -228,6 +232,7 @@ void display_update()
 
   /* draw the sprite to the display as an overlay */
   img.pushSprite(1, 1);  // specify "BLACK" as the transparent colour
+  img.deleteSprite();
 }
 
 void display_QRcode(const char* Message)

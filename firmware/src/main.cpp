@@ -11,16 +11,11 @@
 #include "soc/timer_group_struct.h"
 #include "soc/timer_group_reg.h"
 
-void kickTheDog(){
-  // feed dog 0
-  TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
-  TIMERG0.wdt_feed=1;                       // feed dog
-  TIMERG0.wdt_wprotect=0;                   // write protect
-  // feed dog 1
-  TIMERG1.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
-  TIMERG1.wdt_feed=1;                       // feed dog
-  TIMERG1.wdt_wprotect=0;                   // write protect
-}
+void Task1code( void * pvParameters );
+void Task2code( void * pvParameters );
+void kickTheDog();
+void timers_init(void);
+
 
 
 TaskHandle_t Task1;
@@ -33,15 +28,7 @@ timer_t sensorReadTimer;
 timer_t mqttPublishTimer;
 timer_t displayRefreshTimer;
 
-void timers_init(void)
-{
-  // Set all timers to a large value so that all the timers fire first time around the main loop
-  sensorReadTimer = 99999;
-  displayRefreshTimer = 99999;
 
-   
-  timer_set(&buttonHeldTimer);
-}
 
 void setup() 
 {
@@ -70,6 +57,33 @@ void setup()
                     0);          /* pin task to core 1 */
     
 }
+
+void loop() 
+{
+  delay(100);
+}
+
+void kickTheDog(){
+  // feed dog 0
+  TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
+  TIMERG0.wdt_feed=1;                       // feed dog
+  TIMERG0.wdt_wprotect=0;                   // write protect
+  // feed dog 1
+  TIMERG1.wdt_wprotect=TIMG_WDT_WKEY_VALUE; // write enable
+  TIMERG1.wdt_feed=1;                       // feed dog
+  TIMERG1.wdt_wprotect=0;                   // write protect
+}
+
+void timers_init(void)
+{
+  // Set all timers to a large value so that all the timers fire first time around the main loop
+  sensorReadTimer = 99999;
+  displayRefreshTimer = 99999;
+
+   
+  timer_set(&buttonHeldTimer);
+}
+
 
 void Task1code( void * pvParameters ){
   Serial.print("Task1 running on core ");
@@ -107,7 +121,7 @@ void Task2code( void * pvParameters ){
 
   
   display_init();
-  display_splash();
+  //display_splash();
   
   temperature_init();
   commands_init();
@@ -142,6 +156,7 @@ void Task2code( void * pvParameters ){
     // check for button press
     if(button.wasPressed())
     {
+      Serial.println("Button pressed");
       timer_set(&buttonHeldTimer);
       // start timer
     }
@@ -149,6 +164,7 @@ void Task2code( void * pvParameters ){
     // check for button release
     if (button.wasReleased())
     {
+        Serial.println("Button released");
         if(display_qr_mode_is_enabled())
         {
           display_qr_mode_enable(false);
@@ -189,11 +205,4 @@ void Task2code( void * pvParameters ){
     commands_process();
     kickTheDog();
   }
-}
-
-
-
-void loop() 
-{
-  delay(100);
 }
