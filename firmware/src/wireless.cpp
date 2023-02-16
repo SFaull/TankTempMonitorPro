@@ -34,18 +34,32 @@
 // import the headers
 #include <ESPmDNS.h>
 
+#define JSON_PROP_TEMP_TANK_TOP     "temperature_tank_top"
+#define JSON_PROP_TEMP_TANK_MID_HI  "temperature_tank_mid_hi"
+#define JSON_PROP_TEMP_TANK_MID_LO  "temperature_tank_mid_lo"
+#define JSON_PROP_TEMP_TANK_BOTTOM  "temperature_tank_bottom"
+#define JSON_PROP_TEMP_TANK_PUMP    "temperature_pump"
+#define JSON_PROP_WIFI_RSSI         "wifi_rssi"
+#define JSON_PROP_LIGHT_LEVEL       "light_level"
+
+
   // General variable declarations
   WiFiClient espClient;
   PubSubClient client(espClient);
+
+  static bool discoveryRequested = false;
   
   /* local prototypes */
   static void wifi_init(void);
   static void wifi_process(void);
   static void mqtt_init(void);
   static void mqtt_process(void);
+  static void mqtt_discovery_sensor(String sensorName, String sensorFriendlyName, String sensorClass, String sensorUnit);
+  static void mqtt_discovery_all_sensors(void);
   static void mqtt_callback(char* topic, byte* payload, unsigned int length);
   static void OTA_init(void);
   static void OTA_process(void);
+  static double roundNumber(double value, unsigned int dp);
   static IPAddress findMDNS(String mDnsHost);
   
   void wireless_init(void)
@@ -61,7 +75,12 @@
     OTA_process();
   }
 
-  void wireless_mqtt_publish()
+  void wireless_mqtt_discovery(void)
+  {
+    discoveryRequested = true;
+  }
+
+  void wireless_mqtt_publish(void)
   {
     mqtt_process();
   }
@@ -146,7 +165,58 @@
     IPAddress ip = findMDNS(MQTT_SERVER);
     client.setServer(ip, MQTT_PORT);
     client.setCallback(mqtt_callback);
+    client.setBufferSize(512);
   }
+
+  void mqtt_discovery_all_sensors(void)
+  {
+    mqtt_discovery_sensor(JSON_PROP_TEMP_TANK_TOP, "Tank Top", "temperature", "°C");
+    mqtt_discovery_sensor(JSON_PROP_TEMP_TANK_MID_HI, "Tank Mid Upper", "temperature", "°C");
+    mqtt_discovery_sensor(JSON_PROP_TEMP_TANK_MID_LO, "Tank Mid Lower", "temperature", "°C");
+    mqtt_discovery_sensor(JSON_PROP_TEMP_TANK_BOTTOM, "Tank Bottom", "temperature", "°C");
+    mqtt_discovery_sensor(JSON_PROP_TEMP_TANK_PUMP, "Pump", "temperature", "°C");
+    mqtt_discovery_sensor(JSON_PROP_WIFI_RSSI, "WiFi RSSI", "signal_strength", "dBm");
+    mqtt_discovery_sensor(JSON_PROP_LIGHT_LEVEL, "Light Level", "illuminance", "ADC");
+  }
+
+  
+  void mqtt_discovery_sensor(String sensorName, String sensorFriendlyName, String sensorClass, String sensorUnit) 
+  {
+    // This is the discovery topic for this specific sensor
+    String discoveryTopic = String(MQTT_DISCOVERY_TOPIC) + "/" + sensorName + "/config";
+
+    StaticJsonDocument<2048> doc; // create a JSON document
+    char buffer[512];
+
+    doc["name"] = sensorFriendlyName;
+    doc["unique_id"] = String(HOSTNAME) + "_" + sensorName;
+    doc["state_topic"] = MQTT_TOPIC("data");
+    doc["state_class"] = "measurement";
+    doc["unit_of_measurement"] = sensorUnit;
+    doc["device_class"] = sensorClass;
+    doc["force_update"] = true;
+    doc["value_template"] = "{{ value_json." + sensorName + " }}";
+    doc["device"]["identifiers"] = HOSTNAME; 
+    doc["device"]["name"] = String(DEVICE_MODEL) + "_" + String(HOSTNAME); 
+    doc["device"]["manufacturer"] = "SamFaull";
+    doc["device"]["sw_version"] = VERSION_STRING; 
+    doc["device"]["model"] = DEVICE_MODEL; 
+
+    size_t n = serializeJson(doc, buffer);
+
+    bool result = client.publish(discoveryTopic.c_str(), buffer, n);
+
+    // debug
+    //Serial.print("Bytes: ");
+    //Serial.println(n);
+    Serial.print("Topic: ");
+    Serial.println(discoveryTopic.c_str());
+    Serial.print("JSON: ");
+    serializeJsonPretty(doc, Serial);
+    Serial.println();
+    Serial.println(result ? "Send: Success" : "Send: Failed");
+  }
+
   
   static void mqtt_process(void)
   {
@@ -200,12 +270,18 @@
     /* Post MQTT Message */
     if(client.connected())
     {
+      if(discoveryRequested)
+      {
+        mqtt_discovery_all_sensors();
+        discoveryRequested = false;
+      }
+
       /* fetch the temperature data */
       bool validReadings = true;
-      float temp[5];
+      double temp[5];
       for(int i=0; i<5; i++)
       {
-        temp[i] = temperature_get((position_t)i);
+        temp[i] = roundNumber(temperature_get((position_t)i), 2);
         
         if(temp[i] < -54.0 || temp[i] > 126.0)
         {
@@ -220,13 +296,13 @@
 #ifdef MQTT_JSON
         StaticJsonDocument<1024> doc; // create a JSON document
         // copy the temparure readings into the JSON object as strings
-        doc["temperature_tank_top"] = temp[0];
-        doc["temperature_tank_mid_hi"] = temp[1];
-        doc["temperature_tank_mid_lo"] = temp[2];
-        doc["temperature_tank_bottom"] = temp[3];
-        doc["temperature_pump"] = temp[4];
-        doc["wifi_rssi"] = WiFi.RSSI();
-        doc["light_level"] = analogRead(LDR_PIN);
+        doc[JSON_PROP_TEMP_TANK_TOP] = temp[0];
+        doc[JSON_PROP_TEMP_TANK_MID_HI] = temp[1];
+        doc[JSON_PROP_TEMP_TANK_MID_LO] = temp[2];
+        doc[JSON_PROP_TEMP_TANK_BOTTOM] = temp[3];
+        doc[JSON_PROP_TEMP_TANK_PUMP] = temp[4];
+        doc[JSON_PROP_WIFI_RSSI] = WiFi.RSSI();
+        doc[JSON_PROP_LIGHT_LEVEL] = analogRead(LDR_PIN);
         char buffer[512]; // create a character buffer for the JSON serialised stream
         size_t n = serializeJson(doc, buffer);  // serialise the JSON doc
         client.publish(MQTT_TOPIC("data"), buffer, n);  // pulish the stream
@@ -356,6 +432,12 @@
   {
     ArduinoOTA.handle();
   }
+
+  // rounds a number to x decimal places
+  // example: round(3.14159, 2) -> 3.14
+double roundNumber(double value, unsigned int dp) {
+   return (int)(value * (10*dp) + 0.5) / (10.0 * (float)dp) ;
+}
 
 
 // on my laptop (Ubuntu) the equivalent command is: `avahi-resolve-host-name -4 mqtt-broker.local`
