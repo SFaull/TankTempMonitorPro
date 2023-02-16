@@ -5,8 +5,10 @@
 /* General */
 #define HOSTNAME                  "krusty"
 #define DEVICE_NAME               HOSTNAME
+#define DEVICE_MODEL              "SensorNode"
 #define SERIAL_BAUD_RATE          115200
 #define MQTT_PUBLISH_INTERVAL     10000 // 10 seconds
+#define MQTT_DISCOVERY_INTERVAL   60000 // 60 seconds
 #define BUTTON_HOLD_DURATION      800  // 0.8 seconds
 /* Pinout */
 #define ONE_WIRE_BUS              17  // onewire sensors are connected to pin
@@ -38,6 +40,7 @@
   #define MQTT_PORT               1883
   #define MQTT_ROOM               "airing_cupboard"
   #define MQTT_TOPIC(x)           MQTT_ROOM "/" HOSTNAME "/" x
+  #define MQTT_DISCOVERY_TOPIC    "homeassistant/sensor/" DEVICE_NAME 
 #endif
 
 
