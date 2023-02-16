@@ -2,6 +2,18 @@
 #define ENABLE_WIRELESS
 #define MQTT_JSON
 
+/* Wireless */
+#ifdef ENABLE_WIRELESS
+  #include "credentials.h"
+  /* Wifi */
+  #define WIFI_TIMEOUT            300           // device will reset if no connection via portal within this number of seconds
+  /* MQTT */
+  #define MQTT_ROOM               "airing_cupboard"
+  #define MQTT_TOPIC(x)           MQTT_ROOM "/" HOSTNAME "/" x
+  #define MQTT_DISCOVERY_TOPIC    "homeassistant/sensor/" DEVICE_NAME 
+#endif
+
+
 /* General */
 #define HOSTNAME                  "krusty"
 #define DEVICE_NAME               HOSTNAME
@@ -29,24 +41,9 @@
 #define TEMP_COLD                 30
 #define SENSOR_COUNT 5
 
-/* Wireless */
-#ifdef ENABLE_WIRELESS
-  /* Wifi */
-  #define WIFI_TIMEOUT            300           // device will reset if no connection via portal within this number of seconds
-  /* MQTT */
-  #define MQTT_SERVER             "your.server.here"
-  #define MQTT_USERNAME           "username"
-  #define MQTT_PASSWORD           "password"
-  #define MQTT_PORT               1883
-  #define MQTT_ROOM               "airing_cupboard"
-  #define MQTT_TOPIC(x)           MQTT_ROOM "/" HOSTNAME "/" x
-  #define MQTT_DISCOVERY_TOPIC    "homeassistant/sensor/" DEVICE_NAME 
-#endif
 
 
-
-
-/* Task sesnor addresses */
+/* Task sensor addresses */
 /* This section allows you to map any given sensor to a physical location via the sensors unique address */
 #define ADDRESS_TANK_TOP          "2804D045920C026B"
 #define ADDRESS_TANK_MID_HI       "28263E7997020326"
