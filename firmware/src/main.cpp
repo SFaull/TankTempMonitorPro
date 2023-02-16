@@ -26,6 +26,7 @@ Button button(BUTTON_PIN);       // define the button
 timer_t buttonHeldTimer;
 timer_t sensorReadTimer;
 timer_t mqttPublishTimer;
+timer_t mqttDiscoveryTimer;
 timer_t displayRefreshTimer;
 
 
@@ -91,10 +92,19 @@ void Task1code( void * pvParameters ){
 
   wireless_init();
   timer_set(&mqttPublishTimer); 
+  timer_set(&mqttDiscoveryTimer); 
+  mqttDiscoveryTimer += MQTT_DISCOVERY_INTERVAL;  // ensure timer is triggered straight away
    
   for(;;){
 
-    // post MQTT
+    // post MQTT discovery messages
+    if(timer_expired(mqttDiscoveryTimer, MQTT_DISCOVERY_INTERVAL))
+    {  
+      wireless_mqtt_discovery();
+      timer_set(&mqttDiscoveryTimer);    
+    }
+
+    // post MQTT data message
     if(timer_expired(mqttPublishTimer, MQTT_PUBLISH_INTERVAL))
     {  
       Serial.println("MQTT update");
